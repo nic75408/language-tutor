@@ -84,16 +84,27 @@
     return autoReadEnabled;
   }
 
-  function speak(text) {
-    if (!isSynthesisSupported() || !text) return;
+  function speak(text, opts) {
+    opts = opts || {};
+    if (!isSynthesisSupported() || !text) {
+      return null;
+    }
     try {
       synth.cancel();
       var utter = new SpeechSynthesisUtterance(text);
       utter.lang = 'en-US';
       utter.rate = 0.95;
+      if (opts.onStart) utter.onstart = opts.onStart;
+      if (opts.onEnd) utter.onend = opts.onEnd;
+      utter.onerror = function () {
+        if (opts.onEnd) opts.onEnd();
+      };
       synth.speak(utter);
+      return utter;
     } catch (e) {
       console.warn('朗读失败:', e);
+      if (opts.onEnd) opts.onEnd();
+      return null;
     }
   }
 

@@ -182,7 +182,13 @@
         '<button class="btn-end-chat" data-action="end">结束对话</button>' +
         '</div></div>' +
         '<div class="conv-messages" id="conv-messages"></div>' +
-        '<div class="conv-composer">' +
+        '<div class="recording-overlay" id="conv-recording-overlay" hidden>' +
+        '<div class="recording-waveform"><span></span><span></span><span></span><span></span><span></span></div>' +
+        '<span class="recording-text">正在听你说...</span>' +
+        '<span class="recording-timer" id="conv-recording-timer">0:00</span>' +
+        '</div>' +
+        '<button class="pending-badge" id="conv-pending-badge" hidden>' + window.Icons.get('clock', { size: 14 }) + '<span>待发送 · 点击确认</span></button>' +
+        '<div class="conv-composer" id="conv-composer">' +
         '<input type="text" id="conv-input" placeholder="用英语打字，或按住麦克风说话..." />' +
         '<button class="btn-mic" id="conv-mic" title="按住说话" aria-label="按住说话">' + window.Icons.get('waveform', { size: 20 }) + '</button>' +
         '<button class="btn-send" id="conv-send" disabled aria-label="发送">' + window.Icons.get('chevron.right', { size: 18 }) + '</button>' +
@@ -204,14 +210,35 @@
 
       var input = body.querySelector('#conv-input');
       var sendBtn = body.querySelector('#conv-send');
+      var composer = body.querySelector('#conv-composer');
+      var pendingBadge = body.querySelector('#conv-pending-badge');
+      var recordingOverlay = body.querySelector('#conv-recording-overlay');
+      var recordingTimerEl = body.querySelector('#conv-recording-timer');
+      var recordingTimerHandle = null;
+
+      function hidePendingBadge() {
+        pendingBadge.hidden = true;
+        composer.classList.remove('has-pending');
+      }
+      function showPendingBadge() {
+        pendingBadge.hidden = false;
+        composer.classList.add('has-pending');
+      }
+      pendingBadge.addEventListener('click', function () {
+        // 徽章仅作"待确认"视觉提示，点击只是确认/收起，真正发送仍需点发送按钮
+        hidePendingBadge();
+      });
+
       input.addEventListener('input', function () {
         sendBtn.disabled = input.value.trim().length === 0;
+        hidePendingBadge();
       });
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !sendBtn.disabled) {
           submitUserText(input.value.trim());
           input.value = '';
           sendBtn.disabled = true;
+          hidePendingBadge();
         }
       });
       sendBtn.addEventListener('click', function () {
@@ -219,9 +246,28 @@
         submitUserText(input.value.trim());
         input.value = '';
         sendBtn.disabled = true;
+        hidePendingBadge();
       });
 
       var micBtn = body.querySelector('#conv-mic');
+
+      function startTimer() {
+        var startedAt = Date.now();
+        recordingTimerEl.textContent = '0:00';
+        recordingTimerHandle = setInterval(function () {
+          var elapsed = Math.floor((Date.now() - startedAt) / 1000);
+          var m = Math.floor(elapsed / 60);
+          var s = elapsed % 60;
+          recordingTimerEl.textContent = m + ':' + String(s).padStart(2, '0');
+        }, 200);
+      }
+      function stopTimer() {
+        if (recordingTimerHandle) {
+          clearInterval(recordingTimerHandle);
+          recordingTimerHandle = null;
+        }
+      }
+
       var startMic = function (e) {
         e.preventDefault();
         if (!window.Speech.isRecognitionSupported()) {
@@ -229,19 +275,29 @@
           return;
         }
         micBtn.classList.add('recording');
+        recordingOverlay.hidden = false;
+        hidePendingBadge();
+        startTimer();
         recognitionCtrl = window.Speech.startRecognition({
           onResult: function (text) {
             micBtn.classList.remove('recording');
+            recordingOverlay.hidden = true;
+            stopTimer();
             if (text) {
               input.value = text;
               sendBtn.disabled = false;
+              showPendingBadge();
             }
           },
           onError: function () {
             micBtn.classList.remove('recording');
+            recordingOverlay.hidden = true;
+            stopTimer();
           },
           onEnd: function () {
             micBtn.classList.remove('recording');
+            recordingOverlay.hidden = true;
+            stopTimer();
           }
         });
       };
@@ -283,7 +339,14 @@
       wrap.innerHTML = html;
       wrap.querySelectorAll('[data-speak]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          window.Speech.speak(btn.getAttribute('data-speak'));
+          var text = btn.getAttribute('data-speak');
+          wrap.querySelectorAll('.msg-speak-btn.playing').forEach(function (b) {
+            b.classList.remove('playing');
+          });
+          window.Speech.speak(text, {
+            onStart: function () { btn.classList.add('playing'); },
+            onEnd: function () { btn.classList.remove('playing'); }
+          });
         });
       });
       wrap.scrollTop = wrap.scrollHeight;
@@ -312,7 +375,13 @@
         window.ConversationStore.upsert(currentSession);
         renderMessages();
         if (window.Speech.getAutoRead()) {
-          window.Speech.speak(result.text);
+          var wrap = body.querySelector('#conv-messages');
+          var btns = wrap ? wrap.querySelectorAll('[data-speak]') : [];
+          var lastBtn = btns.length ? btns[btns.length - 1] : null;
+          window.Speech.speak(result.text, {
+            onStart: function () { if (lastBtn) lastBtn.classList.add('playing'); },
+            onEnd: function () { if (lastBtn) lastBtn.classList.remove('playing'); }
+          });
         }
       });
     }

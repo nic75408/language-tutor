@@ -1911,6 +1911,7 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 60vh;
+  position: relative; /* 录音覆盖层 / 待发送徽章的定位锚点 · t_70315a71 */
 }
 .conv-chat-header {
   display: flex;
@@ -2063,14 +2064,35 @@ body {
 }
 
 .msg-speak-btn {
+  /* 视觉 13px 字，热区 ≥ 44×44 · DESIGN.md button-speak · t_70315a71 */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin-top: 4px;
   background: none;
   border: none;
   color: var(--color-ink-3);
+  font-family: var(--font-sans);
   font-size: 13px;
   cursor: pointer;
   align-self: flex-start;
-  padding: 0;
+  padding: 8px;
+  min-height: 44px;
+  min-width: 44px;
+}
+.msg-speak-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.msg-speak-btn.playing {
+  color: var(--color-primary);
+}
+.msg-speak-btn.playing svg {
+  animation: speaker-pulse 0.8s ease-in-out infinite;
+}
+@keyframes speaker-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.85; }
 }
 
 .conv-typing {
@@ -2147,6 +2169,94 @@ body {
   color: var(--color-ink-3);
   text-align: center;
   margin-top: 4px;
+}
+
+/* 待发送态：输入框高亮 · DESIGN.md pending-badge 关联样式 · t_70315a71 */
+.conv-composer.has-pending input[type="text"] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ============ 录音覆盖层 · DESIGN.md recording-overlay · t_70315a71 ============ */
+.recording-overlay {
+  position: absolute;
+  bottom: 70px; /* composer 高度 ~60px + 10px 间距 */
+  left: 20px;
+  right: 20px;
+  background: rgba(28, 27, 24, 0.95); /* ink α0.95 */
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+}
+.recording-waveform {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+}
+.recording-waveform span {
+  width: 3px;
+  background: var(--color-primary);
+  border-radius: 2px;
+  animation: wave 0.4s ease-in-out infinite;
+}
+.recording-waveform span:nth-child(1) { height: 12px; animation-delay: 0s; }
+.recording-waveform span:nth-child(2) { height: 20px; animation-delay: 0.1s; }
+.recording-waveform span:nth-child(3) { height: 16px; animation-delay: 0.2s; }
+.recording-waveform span:nth-child(4) { height: 24px; animation-delay: 0.1s; }
+.recording-waveform span:nth-child(5) { height: 14px; animation-delay: 0.3s; }
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1); }
+}
+.recording-timer {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-ink-3);
+  min-width: 40px;
+  text-align: center;
+}
+.recording-text {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-paper);
+}
+
+/* ============ 待发送徽章 · DESIGN.md pending-badge · t_70315a71 ============ */
+.pending-badge {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  z-index: 100;
+  cursor: pointer;
+  border: none;
+  /* HIG 合规：直接把热区做到 44px，不靠视觉小胶囊+::before 扩展 */
+  height: 44px;
+  padding: 10px 16px;
+}
+.pending-badge svg {
+  width: 14px;
+  height: 14px;
+  animation: clock-tick 1s ease-in-out infinite;
+}
+@keyframes clock-tick {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
 }
 
 /* 对话回顾 */

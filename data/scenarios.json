@@ -1,7 +1,7 @@
 [
   {
     "id": "cafe-order",
-    "icon": "☕",
+    "icon": "cup.and.saucer",
     "category": "travel",
     "title": "咖啡店点单",
     "settingZh": "你走进一家纽约街角的咖啡店，准备点一杯咖啡和一份早餐。店员会用英语接待你——试着自己完成点单、加需求、结账全过程。",
@@ -15,7 +15,7 @@
   },
   {
     "id": "airport-customs",
-    "icon": "🛂",
+    "icon": "airplane",
     "category": "travel",
     "title": "机场过海关",
     "settingZh": "你刚落地，正在排队过海关。海关官员会问你此行目的、停留时间、住处等问题——用简短清楚的英语回答即可，不用紧张。",
@@ -29,7 +29,7 @@
   },
   {
     "id": "hotel-checkin",
-    "icon": "🏨",
+    "icon": "bed.double",
     "category": "travel",
     "title": "酒店办理入住",
     "settingZh": "你到达酒店前台，需要办理入住手续，可能会被问到预订信息、房型偏好、是否需要加床等。",
@@ -43,7 +43,7 @@
   },
   {
     "id": "asking-directions",
-    "icon": "🧭",
+    "icon": "location.north",
     "category": "travel",
     "title": "向路人问路",
     "settingZh": "你在陌生的街道上迷路了，需要向路人问路去最近的地铁站或某个地标。",
@@ -57,7 +57,7 @@
   },
   {
     "id": "small-talk-weather",
-    "icon": "💬",
+    "icon": "bubble.left",
     "category": "daily",
     "title": "和邻居闲聊天气",
     "settingZh": "在电梯或小区里偶遇邻居，两人随口聊几句天气和周末计划——英语里最常见的破冰话题。",
@@ -71,7 +71,7 @@
   },
   {
     "id": "making-plans-friend",
-    "icon": "📅",
+    "icon": "calendar",
     "category": "daily",
     "title": "约朋友周末出行",
     "settingZh": "你想约一位朋友周末一起吃饭或看电影，需要提议时间地点，并协调对方的档期。",
@@ -85,7 +85,7 @@
   },
   {
     "id": "express-feelings",
-    "icon": "🙂",
+    "icon": "face.smiling",
     "category": "daily",
     "title": "表达感受与情绪",
     "settingZh": "朋友问起你最近过得怎么样，练习用英语描述情绪、原因，并简单安慰或回应对方。",
@@ -99,7 +99,7 @@
   },
   {
     "id": "work-meeting",
-    "icon": "💼",
+    "icon": "briefcase",
     "category": "work",
     "title": "工作会议发言",
     "settingZh": "在一个跨国团队的周会上，轮到你汇报本周的项目进度，并回答同事的一个追问。",
@@ -113,7 +113,7 @@
   },
   {
     "id": "work-email-call",
-    "icon": "📧",
+    "icon": "envelope",
     "category": "work",
     "title": "电话沟通邮件跟进",
     "settingZh": "客户没有回复你的邮件，你需要打电话礼貌地跟进，确认对方是否收到并了解下一步。",
@@ -127,7 +127,7 @@
   },
   {
     "id": "work-interview",
-    "icon": "🗂️",
+    "icon": "doc.text",
     "category": "work",
     "title": "工作场合自我介绍",
     "settingZh": "新入职第一天，向同事们做一个简短的自我介绍，说明背景、角色和期待。",

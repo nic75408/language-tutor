@@ -11,6 +11,7 @@ const APP_SHELL = [
   './offline.html',
   './data/vocab-data.js',
   './data/plan-data.js',
+  './js/icons.js',
   './js/app.js',
   './js/ai.js',
   './js/learning-log.js',

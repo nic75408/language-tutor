@@ -46,7 +46,7 @@
 
     container.innerHTML =
       '<div class="page" data-page="grammar">' +
-        '<h1 class="page-title">语法讲堂</h1>' +
+        '<h1 class="page-title">' + window.Icons.get('list.bullet', { size: 22 }) + '<span>语法讲堂</span></h1>' +
         '<div class="grammar-list">' + cards + '</div>' +
       '</div>';
 
@@ -61,7 +61,7 @@
     var correctHtml = item.correct.map(function (ex) {
       return (
         '<div class="grammar-example correct">' +
-          '<div class="grammar-example-en"><span class="grammar-example-mark">✅</span>' + escapeHtml(ex.en) + '</div>' +
+          '<div class="grammar-example-en"><span class="grammar-example-mark ok">' + window.Icons.get('checkmark', { size: 14, color: 'var(--moss)' }) + '</span>' + escapeHtml(ex.en) + '</div>' +
           '<div class="grammar-example-zh">' + escapeHtml(ex.zh) + '</div>' +
         '</div>'
       );
@@ -70,9 +70,9 @@
     var incorrectHtml = item.incorrect.map(function (ex) {
       return (
         '<div class="grammar-example incorrect">' +
-          '<div class="grammar-example-en"><span class="grammar-example-mark">❌</span>' + escapeHtml(ex.wrong) + '</div>' +
+          '<div class="grammar-example-en"><span class="grammar-example-mark err">' + window.Icons.get('xmark', { size: 14, color: 'var(--primary)' }) + '</span>' + escapeHtml(ex.wrong) + '</div>' +
           '<div class="grammar-example-why">为什么错：' + escapeHtml(ex.why) + '</div>' +
-          '<div class="grammar-example-right">✅ 正确写法：' + escapeHtml(ex.right) + '</div>' +
+          '<div class="grammar-example-right"><span class="grammar-example-mark ok">' + window.Icons.get('checkmark', { size: 14, color: 'var(--moss)' }) + '</span>正确写法：' + escapeHtml(ex.right) + '</div>' +
         '</div>'
       );
     }).join('');
@@ -99,7 +99,7 @@
 
       return (
         '<div class="grammar-quiz" data-quiz="' + qIdx + '">' +
-          '<p class="grammar-quiz-question">🎯 ' + escapeHtml(q.question) + '</p>' +
+          '<p class="grammar-quiz-question"><span class="quiz-target-icon">' + window.Icons.get('target', { size: 16, color: 'var(--gold)' }) + '</span>' + escapeHtml(q.question) + '</p>' +
           '<div class="grammar-quiz-options">' + optionsHtml + '</div>' +
           '<div class="grammar-quiz-feedback" data-feedback="' + qIdx + '"></div>' +
         '</div>'
@@ -132,7 +132,10 @@
 
         var feedback = container.querySelector('.grammar-quiz-feedback[data-feedback="' + qIdx + '"]');
         feedback.classList.add(isCorrect ? 'is-correct' : 'is-wrong');
-        feedback.textContent = (isCorrect ? '✅ 答对了！' : '❌ 答错了。') + ' ' + q.explanation;
+        var iconName = isCorrect ? 'checkmark.circle' : 'xmark.circle';
+        var iconColor = isCorrect ? 'var(--moss)' : 'var(--primary)';
+        var label = isCorrect ? '答对了！' : '答错了。';
+        feedback.innerHTML = window.Icons.get(iconName, { size: 16, color: iconColor }) + ' <span>' + label + ' ' + escapeHtml(q.explanation) + '</span>';
 
         if (window.App.quizLog) window.App.quizLog.record(item.id, isCorrect);
         if (window.App.learningLog) window.App.learningLog.recordToday();
@@ -145,7 +148,7 @@
     if (!item) {
       container.innerHTML =
         '<div class="page" data-page="grammar-detail">' +
-          '<button class="grammar-header-back" id="grammar-back">←</button>' +
+          '<button class="grammar-header-back" id="grammar-back" aria-label="返回">' + window.Icons.get('chevron.left', { size: 20 }) + '</button>' +
           '<h1 class="page-title">未找到该语法知识点</h1>' +
         '</div>';
       container.querySelector('#grammar-back').addEventListener('click', function () {
@@ -156,7 +159,7 @@
 
     container.innerHTML =
       '<div class="page" data-page="grammar-detail">' +
-        '<button class="grammar-header-back" id="grammar-back" aria-label="返回">←</button>' +
+        '<button class="grammar-header-back" id="grammar-back" aria-label="返回">' + window.Icons.get('chevron.left', { size: 20 }) + '</button>' +
         '<span class="grammar-badge ' + item.difficulty + '">' + difficultyLabel(item.difficulty) + '</span>' +
         '<h1 class="grammar-detail-title" style="margin-top:8px;">' + escapeHtml(item.title) + '</h1>' +
         '<div class="grammar-section">' +

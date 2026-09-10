@@ -9,9 +9,9 @@
   }
 
   var TYPE_META = {
-    vocab: { emoji: '📖', label: '词汇' },
-    dialogue: { emoji: '💬', label: '对话' },
-    grammar: { emoji: '📐', label: '语法' }
+    vocab: { icon: 'book.closed', label: '词汇' },
+    dialogue: { icon: 'bubble.left', label: '对话' },
+    grammar: { icon: 'list.bullet', label: '语法' }
   };
 
   // 找到"当前进行中"的一周：第一个还没 100% 完成的周；全部完成则回退到最后一周
@@ -44,12 +44,13 @@
 
   function renderTaskCard(task, progress) {
     var done = !!progress[task.id];
-    var meta = TYPE_META[task.type] || { emoji: '📎', label: '' };
+    var meta = TYPE_META[task.type] || { icon: 'doc.text', label: '' };
     var href = taskTargetHref(task);
+    var iconSvg = window.Icons ? window.Icons.get(meta.icon, { size: 14 }) : '';
     return '<div class="home-task-card' + (done ? ' done' : '') + '" data-task-id="' + task.id + '">' +
       '<button class="home-task-checkbox' + (done ? ' checked' : '') + '" data-toggle-task="' + task.id + '" aria-label="标记完成"></button>' +
       '<a class="home-task-body" href="' + href + '">' +
-        '<span class="home-task-type">' + meta.emoji + ' ' + meta.label + '</span>' +
+        '<span class="home-task-type">' + iconSvg + '<span class="home-task-type-label">' + meta.label + '</span></span>' +
         '<span class="home-task-title">' + esc(task.title) + '</span>' +
       '</a>' +
     '</div>';
@@ -62,7 +63,7 @@
     if (!completed) {
       container.innerHTML =
         '<div class="page" data-page="home">' +
-        '<h1 class="page-title">首页</h1>' +
+        '<h1 class="page-title">' + window.Icons.get('house', { size: 22 }) + '<span>首页</span></h1>' +
         '<div class="home-onboard-banner" data-testid="onboard-banner">' +
         '<p class="home-onboard-text">完成评估，解锁你的专属学习计划</p>' +
         '<button class="assess-btn-primary" id="home-start-assess" data-testid="home-start-assess">开始评估</button>' +
@@ -83,13 +84,13 @@
 
     var tasksHtml = todayTasks.length
       ? todayTasks.map(function (t) { return renderTaskCard(t, progress); }).join('')
-      : '<p class="home-task-empty">今日任务已全部完成，去学习计划看看下一周吧 🎉</p>';
+      : '<p class="home-task-empty">今日任务已全部完成，去学习计划看看下一周吧</p>';
 
     var ringDeg = Math.round(weekPercent * 3.6);
 
     container.innerHTML =
       '<div class="page" data-page="home">' +
-      '<h1 class="page-title">首页</h1>' +
+      '<h1 class="page-title">' + window.Icons.get('house', { size: 22 }) + '<span>首页</span></h1>' +
       '<div class="home-level-card">当前水平：<strong>' + esc(result.level) + '</strong></div>' +
 
       '<div class="home-dashboard-row">' +
@@ -101,7 +102,7 @@
         '</div>' +
         '<div class="home-streak-card" data-testid="home-streak">' +
           '<span class="home-streak-num">' + streak + '</span>' +
-          '<span class="home-streak-label">连续学习 · 天</span>' +
+          '<span class="home-streak-label">' + window.Icons.get('flame', { size: 14 }) + '<span>连续学习天数</span></span>' +
         '</div>' +
       '</div>' +
 
@@ -113,10 +114,10 @@
       '<div class="home-section">' +
         '<h2 class="home-section-title">快捷入口</h2>' +
         '<div class="home-shortcut-row">' +
-          '<a class="home-shortcut" href="#conversation" data-testid="shortcut-conversation">💬<span>对话</span></a>' +
-          '<a class="home-shortcut" href="#vocab" data-testid="shortcut-vocab">📖<span>词库</span></a>' +
-          '<a class="home-shortcut" href="#grammar" data-testid="shortcut-grammar">📐<span>语法</span></a>' +
-          '<a class="home-shortcut" href="#plan" data-testid="shortcut-plan">📋<span>学习计划</span></a>' +
+          '<a class="home-shortcut" href="#conversation" data-testid="shortcut-conversation">' + window.Icons.get('bubble.left', { size: 22 }) + '<span>对话</span></a>' +
+          '<a class="home-shortcut" href="#vocab" data-testid="shortcut-vocab">' + window.Icons.get('book.closed', { size: 22 }) + '<span>词库</span></a>' +
+          '<a class="home-shortcut" href="#grammar" data-testid="shortcut-grammar">' + window.Icons.get('list.bullet', { size: 22 }) + '<span>语法</span></a>' +
+          '<a class="home-shortcut" href="#plan" data-testid="shortcut-plan">' + window.Icons.get('calendar', { size: 22 }) + '<span>学习计划</span></a>' +
         '</div>' +
       '</div>' +
       '</div>';

@@ -34,7 +34,7 @@
       id: 'conv-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
       sceneId: scene ? scene.id : null,
       sceneTitle: scene ? scene.title : '自由对话',
-      sceneIcon: scene ? scene.icon : '💬',
+      sceneIcon: scene ? scene.icon : 'waveform',
       startedAt: Date.now(),
       endedAt: null,
       messages: [],

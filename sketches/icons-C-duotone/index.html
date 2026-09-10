@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 C · SF Duotone（stroke + 20% fill）</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F3EC;
+    --ink-1:#1C1B18;
+    --ink-2:#57534E;
+    --ink-3:#8D8880;
+    --rule:#E8E1D4;
+    --primary:#B23A28;
+    --gold:#B08842;
+    --moss:#253830;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink-1);font-family:'Inter','PingFang SC',sans-serif;}
+  .container{max-width:960px;margin:0 auto;padding:40px 24px 120px;}
+  h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:32px;margin:0 0 6px;letter-spacing:-0.01em;}
+  .subtitle{color:var(--ink-3);font-size:14px;margin-bottom:36px;}
+  .section-title{font-family:'Source Serif 4',serif;font-weight:600;font-size:20px;margin:36px 0 14px;border-bottom:1px solid var(--rule);padding-bottom:8px;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .card{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:20px 16px;text-align:center;}
+  /* Duotone: stroke line + secondary fill at 20% opacity */
+  .card svg{width:32px;height:32px;display:block;margin:0 auto 10px;}
+  .card svg .stroke{stroke:var(--ink-1);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .card svg .fill{fill:var(--ink-1);fill-opacity:0.18;stroke:none;}
+  .card .name{font-size:12px;color:var(--ink-2);}
+  .card .code{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-3);margin-top:4px;}
+
+  /* Tab bar with active-state fill */
+  .tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--paper);border-top:1px solid var(--rule);height:82px;display:flex;padding-bottom:20px;z-index:10;}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);font-size:11px;gap:4px;cursor:pointer;}
+  .tab.active{color:var(--primary);}
+  .tab svg{width:24px;height:24px;}
+  .tab svg .stroke{stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .tab svg .fill{fill:currentColor;fill-opacity:0;stroke:none;transition:fill-opacity .2s;}
+  .tab.active svg .fill{fill-opacity:0.22;}
+
+  .demo{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .demo-block{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:18px;}
+  .demo-title{font-family:'Source Serif 4',serif;font-weight:600;font-size:16px;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .demo-title svg{width:22px;height:22px;}
+  .demo-title svg .stroke{stroke:var(--ink-1);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .demo-title svg .fill{fill:var(--ink-1);fill-opacity:0.18;stroke:none;}
+  .shortcut{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--rule);border-radius:4px;margin-bottom:8px;}
+  .shortcut svg{width:22px;height:22px;flex-shrink:0;}
+  .shortcut svg .stroke{stroke:var(--ink-1);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .shortcut svg .fill{fill:var(--ink-1);fill-opacity:0.18;stroke:none;}
+  .shortcut .label{font-size:14px;font-weight:500;flex:1;}
+  .shortcut .arrow{width:16px;height:16px;}
+  .shortcut .arrow path{stroke:var(--ink-3);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .stat-row{display:flex;gap:8px;align-items:center;padding:8px 0;color:var(--ink-2);font-size:13px;}
+  .stat-row svg{width:18px;height:18px;}
+  .stat-row svg .stroke{stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .stat-row svg .fill{fill:currentColor;fill-opacity:0.22;stroke:none;}
+  .stat-row .val{color:var(--ink-1);font-family:'JetBrains Mono',monospace;font-weight:500;margin-left:auto;}
+
+  .scene-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--rule);border-radius:4px;margin-bottom:6px;}
+  .scene-card svg{width:28px;height:28px;flex-shrink:0;}
+  .scene-card svg .stroke{stroke:var(--moss);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .scene-card svg .fill{fill:var(--moss);fill-opacity:0.18;stroke:none;}
+
+  .status-row{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:13px;}
+  .status-row svg{width:18px;height:18px;}
+  .status-row svg .stroke{stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .status-row svg .fill{stroke:none;}
+  .status-row.ok svg .stroke{stroke:var(--moss);}
+  .status-row.ok svg .fill{fill:var(--moss);fill-opacity:0.22;}
+  .status-row.err svg .stroke{stroke:var(--primary);}
+  .status-row.err svg .fill{fill:var(--primary);fill-opacity:0.22;}
+
+  .btn-icon{width:36px;height:36px;border:1px solid var(--rule);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#fff;}
+  .btn-icon svg{width:18px;height:18px;}
+  .btn-icon svg .stroke{stroke:var(--ink-1);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .btn-icon svg .fill{fill:var(--ink-1);fill-opacity:0.18;stroke:none;}
+  .btn-icon.active{background:var(--ink-1);color:var(--paper);}
+  .btn-icon.active svg .stroke{stroke:var(--paper);}
+  .btn-icon.active svg .fill{fill:var(--paper);fill-opacity:0.3;}
+
+  .nav-back{width:40px;height:40px;border:1px solid var(--rule);border-radius:20px;background:rgba(247,243,236,0.55);backdrop-filter:blur(14px);display:inline-flex;align-items:center;justify-content:center;}
+  .nav-back svg{width:20px;height:20px;}
+  .nav-back svg path{stroke:var(--ink-1);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .caption{color:var(--ink-3);font-size:12px;line-height:1.55;margin:8px 0 24px;}
+  .caption strong{color:var(--ink-2);}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>方案 C · SF Duotone</h1>
+  <div class="subtitle">Stroke 1.7px + 20% fill 副色 · 层级最强 · 激活态可整体填充 · 状态语义最强</div>
+
+  <div class="section-title">Tab bar（激活态 = fill 22%）</div>
+  <div class="grid">
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/><path class="stroke" d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/></svg><div class="name">首页</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path class="stroke" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path class="stroke" d="M5 17a3 3 0 0 1 3-3h11"/></svg><div class="name">词库</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M4 6h16v10H8l-4 4V6z"/><path class="stroke" d="M4 6h16v10H8l-4 4V6z"/></svg><div class="name">对话</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><rect class="fill" x="3.5" y="4" width="17" height="17" rx="1"/><path class="stroke" d="M4 5h16M4 10h10M4 15h16M4 20h10"/></svg><div class="name">语法</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><circle class="fill" cx="12" cy="8" r="4"/><path class="fill" d="M4 21c1-4 4-6 8-6s7 2 8 6z"/><circle class="stroke" cx="12" cy="8" r="4"/><path class="stroke" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg><div class="name">我</div></div>
+  </div>
+
+  <div class="section-title">页面标题（视觉重量最强）</div>
+  <div class="demo">
+    <div class="demo-block">
+      <div class="demo-title"><svg viewBox="0 0 24 24"><path class="fill" d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/><path class="stroke" d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/></svg>首页</div>
+      <div class="demo-title"><svg viewBox="0 0 24 24"><path class="fill" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path class="stroke" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/></svg>词库</div>
+      <div class="demo-title"><svg viewBox="0 0 24 24"><path class="fill" d="M4 6h16v10H8l-4 4V6z"/><path class="stroke" d="M4 6h16v10H8l-4 4V6z"/></svg>对话</div>
+      <div class="demo-title"><svg viewBox="0 0 24 24"><circle class="fill" cx="12" cy="8" r="4"/><path class="fill" d="M4 21c1-4 4-6 8-6s7 2 8 6z"/><circle class="stroke" cx="12" cy="8" r="4"/><path class="stroke" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>我</div>
+    </div>
+    <div class="caption">
+      <strong>视觉重量比 A 高 40%</strong>——icon 存在感强，页面导航"胖"。<br>
+      <strong>风险</strong>：与 Newsprint 编辑室"克制"性格潜在冲突——18% fill 是一层色块，纸底/衬线气质里"多了一块"。
+    </div>
+  </div>
+
+  <div class="section-title">对话场景卡（moss 墨绿 duotone）</div>
+  <div class="grid">
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M6 8h9v6a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V8z" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M6 8h9v6a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V8z"/><path class="stroke" style="stroke:var(--moss);" d="M15 10h2a2 2 0 0 1 0 4h-2"/><path class="stroke" style="stroke:var(--moss);" d="M8 3v2M11 3v2"/></svg><div class="name">咖啡店点单</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M4 12l3-6h10l3 6v6H4z" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M4 12h16M4 12l3-6h10l3 6M4 12v6h16v-6"/><circle class="stroke" style="stroke:var(--moss);" cx="8" cy="15" r="1"/><circle class="stroke" style="stroke:var(--moss);" cx="16" cy="15" r="1"/></svg><div class="name">机场</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M3 21V8l9-5 9 5v13z" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M3 21V8l9-5 9 5v13"/><path class="stroke" style="stroke:var(--moss);" d="M9 21v-6h6v6"/></svg><div class="name">酒店</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><circle class="fill" cx="12" cy="12" r="9" style="fill:var(--moss);fill-opacity:.18;"/><circle class="stroke" style="stroke:var(--moss);" cx="12" cy="12" r="9"/><path class="stroke" style="stroke:var(--moss);" d="m9 15 2-6 4 2-6 4z"/></svg><div class="name">问路</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><rect class="fill" x="4" y="7" width="16" height="13" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M8 3v3M16 3v3"/><path class="stroke" style="stroke:var(--moss);" d="M4 7h16v13H4z"/><path class="stroke" style="stroke:var(--moss);" d="M4 11h16"/></svg><div class="name">约朋友</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M3 12c0-4 4-8 9-8s9 4 9 8-4 8-9 8c-1.5 0-3-.4-4-1l-4 1 1-4c-1-1.5-2-3-2-4z" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M3 12c0-4 4-8 9-8s9 4 9 8-4 8-9 8c-1.5 0-3-.4-4-1l-4 1 1-4c-1-1.5-2-3-2-4z"/></svg><div class="name">闲聊</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><circle class="fill" cx="12" cy="12" r="9" style="fill:var(--moss);fill-opacity:.18;"/><circle class="stroke" style="stroke:var(--moss);" cx="12" cy="12" r="9"/><path class="stroke" style="stroke:var(--moss);" d="M9 10h.01M15 10h.01M9 15c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg><div class="name">感受</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><rect class="fill" x="4" y="7" width="16" height="13" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M4 7h16v13H4z"/><path class="stroke" style="stroke:var(--moss);" d="M8 7V4h8v3"/><path class="stroke" style="stroke:var(--moss);" d="M4 12h16"/></svg><div class="name">工作会议</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><rect class="fill" x="4" y="5" width="16" height="14" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M4 5h16v14H4z"/><path class="stroke" style="stroke:var(--moss);" d="m4 5 8 7 8-7"/></svg><div class="name">邮件</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path class="fill" d="M4 5h9l7 7v7H4z" style="fill:var(--moss);fill-opacity:.18;"/><path class="stroke" style="stroke:var(--moss);" d="M4 5h9l7 7v7H4z"/><path class="stroke" style="stroke:var(--moss);" d="M13 5v6h6"/></svg><div class="name">面试</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path class="stroke" style="stroke:var(--moss);" d="M2 12h6l2-8 4 16 2-8h6"/></svg><div class="name">自由对话</div></div>
+    <div class="card" style="background:var(--paper);border-style:dashed;"><svg viewBox="0 0 24 24"><path class="stroke" style="stroke:var(--ink-3);" d="M12 2v20M2 12h20"/></svg><div class="name">分类文字化</div></div>
+  </div>
+
+  <div class="section-title">状态与操作</div>
+  <div class="demo">
+    <div class="demo-block">
+      <div style="font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;margin-bottom:12px;">语法练习</div>
+      <div class="status-row ok"><svg viewBox="0 0 24 24"><circle class="fill" cx="12" cy="12" r="9"/><circle class="stroke" cx="12" cy="12" r="9"/><path class="stroke" d="m8 12 3 3 5-6"/></svg><span>正确写法：I have been working</span></div>
+      <div class="status-row err"><svg viewBox="0 0 24 24"><circle class="fill" cx="12" cy="12" r="9"/><circle class="stroke" cx="12" cy="12" r="9"/><path class="stroke" d="M9 9l6 6M15 9l-6 6"/></svg><span>答错了</span></div>
+      <div class="status-row"><svg viewBox="0 0 24 24" style=""><circle class="fill" style="fill:var(--gold);fill-opacity:.22;" cx="12" cy="12" r="9"/><circle class="stroke" style="stroke:var(--gold);" cx="12" cy="12" r="9"/><circle class="stroke" style="stroke:var(--gold);" cx="12" cy="12" r="4"/></svg><span>本题考点：时态区分</span></div>
+    </div>
+    <div class="demo-block">
+      <div style="font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;margin-bottom:12px;">对话工具栏（激活态填充）</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
+        <span class="btn-icon active" title="朗读开（激活）"><svg viewBox="0 0 24 24"><path class="fill" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="stroke" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="stroke" d="M17 9c1 1 1.5 2 1.5 3s-.5 2-1.5 3"/></svg></span>
+        <span class="btn-icon" title="朗读关"><svg viewBox="0 0 24 24"><path class="fill" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="stroke" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="stroke" d="m17 10 4 4M21 10l-4 4"/></svg></span>
+        <span class="btn-icon"><svg viewBox="0 0 24 24"><path class="stroke" d="M4 20 20 4M14 4l6 6M4 20l6-2"/></svg></span>
+        <span class="nav-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+      </div>
+      <div style="color:var(--ink-3);font-size:11px;">激活态 = 底色反转 + 副色填充 22%</div>
+    </div>
+  </div>
+
+  <div class="section-title">首页 shortcut + 数据</div>
+  <div class="demo">
+    <div class="demo-block">
+      <div class="shortcut">
+        <svg viewBox="0 0 24 24"><path class="fill" d="M4 6h16v10H8l-4 4V6z"/><path class="stroke" d="M4 6h16v10H8l-4 4V6z"/></svg>
+        <span class="label">对话</span>
+        <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+      </div>
+      <div class="shortcut">
+        <svg viewBox="0 0 24 24"><path class="fill" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path class="stroke" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path class="stroke" d="M5 17a3 3 0 0 1 3-3h11"/></svg>
+        <span class="label">词库</span>
+        <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+      </div>
+    </div>
+    <div class="demo-block">
+      <div class="stat-row"><svg viewBox="0 0 24 24"><path class="fill" d="M12 3c0 4-4 5-4 9a4 4 0 0 0 8 0c0-2-1-4-2-5z"/><path class="stroke" d="M12 3c0 4-4 5-4 9a4 4 0 0 0 8 0c0-2-1-4-2-5"/></svg><span>连续学习天数</span><span class="val">7</span></div>
+      <div class="stat-row"><svg viewBox="0 0 24 24"><rect class="fill" x="4" y="6" width="16" height="14"/><rect class="stroke" x="4" y="6" width="16" height="14" rx="1"/><path class="stroke" d="M4 10h16M8 3v6M16 3v6"/></svg><span>本周分钟</span><span class="val">128</span></div>
+      <div class="stat-row"><svg viewBox="0 0 24 24"><path class="fill" d="M4 20V10h4v10zM10 20V4h4v16zM16 20v-6h4v6z"/><path class="stroke" d="M4 20V10M10 20V4M16 20v-6M22 20H2"/></svg><span>词汇掌握</span><span class="val">42%</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:36px;padding:16px;background:#fff;border:1px dashed var(--rule);border-radius:4px;color:var(--ink-2);font-size:13px;line-height:1.7;">
+    <strong>方案 C 手法总结</strong><br>
+    · <strong>手法</strong>：SF Symbols 的 "Duotone" 变体——stroke 描边 + 同色 18-22% 透明填充<br>
+    · <strong>激活态</strong>：填充可增强到 fill-opacity: 0.35 或直接反转背景<br>
+    · <strong>优点</strong>：状态语义最清晰（未激活/激活对比强）、视觉层级最丰富<br>
+    · <strong>缺点</strong>：18% fill 是"多出来的一层色块"，与 Newsprint"文字为主纸感"美学有张力；同一屏 8+ 场景 icon 全带 fill 会形成"色块阵列"分散注意力<br>
+    · <strong>SVG 结构复杂度</strong>：每个 icon 从 1 个 &lt;path&gt; 变 2 个（fill + stroke），代码/DOM 体积翻倍<br>
+    · <strong>命中</strong>：需要强激活反馈的产品（Notion 侧栏、Linear tag）——语言学习工具是否需要这种强度？
+  </div>
+</div>
+
+<nav class="tabbar">
+  <div class="tab active"><svg viewBox="0 0 24 24"><path class="fill" d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/><path class="stroke" d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/></svg>首页</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><path class="fill" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path class="stroke" d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path class="stroke" d="M5 17a3 3 0 0 1 3-3h11"/></svg>词库</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><path class="fill" d="M4 6h16v10H8l-4 4V6z"/><path class="stroke" d="M4 6h16v10H8l-4 4V6z"/></svg>对话</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><rect class="fill" x="3.5" y="4" width="17" height="17" rx="1"/><path class="stroke" d="M4 5h16M4 10h10M4 15h16M4 20h10"/></svg>语法</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><circle class="fill" cx="12" cy="8" r="4"/><path class="fill" d="M4 21c1-4 4-6 8-6s7 2 8 6z"/><circle class="stroke" cx="12" cy="8" r="4"/><path class="stroke" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>我</div>
+</nav>
+</body>
+</html>

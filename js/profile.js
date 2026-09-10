@@ -76,7 +76,7 @@
           '<div class="profile-stat-card"><span class="profile-stat-num" data-testid="stat-week-minutes">' + weekMinutes + '</span><span class="profile-stat-label">本周分钟</span></div>' +
           '<div class="profile-stat-card"><span class="profile-stat-num" data-testid="stat-month-minutes">' + monthMinutes + '</span><span class="profile-stat-label">本月分钟</span></div>' +
           '<div class="profile-stat-card"><span class="profile-stat-num" data-testid="stat-vocab-percent">' + vocabPercent + '%</span><span class="profile-stat-label">词汇掌握</span></div>' +
-          '<div class="profile-stat-card"><span class="profile-stat-num" data-testid="stat-streak">' + streak + '</span><span class="profile-stat-label">🔥 连续天数</span></div>' +
+          '<div class="profile-stat-card"><span class="profile-stat-num" data-testid="stat-streak">' + streak + '</span><span class="profile-stat-label">' + window.Icons.get('flame', { size: 12 }) + '<span>连续天数</span></span></div>' +
         '</div>' +
       '</div>';
 
@@ -90,14 +90,14 @@
       '<div class="profile-section">' +
         '<h2 class="home-section-title">设置</h2>' +
         '<div class="profile-settings-list">' +
-          '<button class="profile-settings-item" id="profile-retake-2" data-testid="profile-retake-settings">🔄 重新测评</button>' +
-          '<button class="profile-settings-item danger" id="profile-clear-data" data-testid="profile-clear-data">🗑️ 清除所有学习数据</button>' +
+          '<button class="profile-settings-item" id="profile-retake-2" data-testid="profile-retake-settings">' + window.Icons.get('arrow.triangle.2.circlepath', { size: 18 }) + '<span>重新测评</span></button>' +
+          '<button class="profile-settings-item danger" id="profile-clear-data" data-testid="profile-clear-data">' + window.Icons.get('trash', { size: 18, color: 'var(--primary)' }) + '<span>清除所有学习数据</span></button>' +
         '</div>' +
       '</div>';
 
     container.innerHTML =
       '<div class="page" data-page="profile">' +
-      '<h1 class="page-title">我</h1>' +
+      '<h1 class="page-title">' + window.Icons.get('person', { size: 22 }) + '<span>我</span></h1>' +
       levelSectionHtml +
       dashboardHtml +
       weakSectionHtml +

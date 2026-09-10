@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>词库 · B 案 · Checkbox 二态</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F3EC; --paper-alt:#EEE8DD; --paper-2:#FDFBF7;
+    --ink:#1C1B18; --ink-2:#5B5750; --ink-3:#8D8880;
+    --rule:#E4DED2;
+    --primary:#B23A28; --primary-soft:#F1D9D3;
+    --warning:#A6822B; --warning-soft:#EFE3C2;
+    --success:#4A6B3C; --success-soft:#D9E1CE;
+    --gold:#8C6A2F;
+    --font-serif:"Source Serif 4",Georgia,serif;
+    --font-sans:"Inter","PingFang SC","Helvetica Neue",Arial,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --tab-bar:82px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+  #app{display:flex;flex-direction:column;height:100dvh;height:100vh}
+  .page-outlet{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .page{padding:calc(8px + var(--safe-top)) 20px calc(var(--tab-bar) + 32px)}
+
+  .page-title{
+    display:flex;align-items:center;gap:8px;
+    font-size:22px;font-weight:700;letter-spacing:-.005em;color:var(--ink);
+    margin:8px 0 4px;
+  }
+  .vocab-summary{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-bottom:12px}
+  .vocab-summary .dot{color:var(--ink-3)}
+
+  /* ============ Sticky 场景 Tab 栏（B 案：更"扁"的 sticky，
+     只 sticky Tab + 一条 hair rule；无毛玻璃——书页感） ============ */
+  .vocab-sticky-tabs{
+    position:sticky;top:0;z-index:10;
+    margin:0 -20px 12px;padding:6px 20px 8px;
+    background:var(--paper); /* 米白纸底，不加毛玻璃 */
+    border-bottom:1px solid var(--rule);
+  }
+  .vocab-scene-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .vocab-scene-tabs::-webkit-scrollbar{display:none}
+  .vocab-scene-tab{
+    flex:0 0 auto;display:flex;align-items:center;gap:6px;
+    min-height:44px;padding:6px 14px;border-radius:999px;
+    border:1px solid var(--rule);background:var(--paper-2);
+    color:var(--ink-2);font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap;
+  }
+  .vocab-scene-tab.active{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+  .vocab-scene-tab .ico{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7}
+
+  .vocab-due-toggle{
+    display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 0;
+    font-size:13px;color:var(--ink-2);margin:0 0 12px;cursor:pointer;
+  }
+  .vocab-due-toggle input{width:18px;height:18px;accent-color:var(--primary);margin:0}
+
+  /* ============ 词卡（B 案：Checkbox 左侧 + 二态） ============ */
+  .vocab-list{display:flex;flex-direction:column;gap:10px}
+  .vocab-card{
+    background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;
+    padding:14px;
+    display:grid;grid-template-columns:auto 1fr;gap:12px;
+    position:relative;
+  }
+  .vocab-card.mastered{background:var(--paper-alt)}
+  .vocab-card.mastered .vocab-en,.vocab-card.mastered .vocab-zh{color:var(--ink-3)}
+
+  /* Master Checkbox —— 沿用 DESIGN.md checkbox-checked pattern（书签红填充打勾） */
+  .vocab-check{
+    flex:0 0 auto;
+    width:22px;height:22px;
+    display:inline-flex;align-items:center;justify-content:center;
+    border:1.5px solid var(--ink-3);border-radius:4px;
+    background:var(--paper);
+    cursor:pointer;position:relative;
+    padding:0;margin-top:2px;
+    /* 隐藏原生 checkbox，用 label 包住整个热区 */
+  }
+  .vocab-check[aria-checked="true"]{background:var(--primary);border-color:var(--primary)}
+  .vocab-check[aria-checked="true"] svg{opacity:1;stroke:var(--paper)}
+  .vocab-check svg{width:14px;height:14px;stroke:transparent;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.15s}
+  /* 44 热区透明扩展器 */
+  .vocab-check::before{content:"";position:absolute;inset:-11px}
+
+  .vocab-check-label{
+    position:absolute;top:6px;right:14px;
+    font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-3);
+    display:flex;align-items:center;gap:4px;
+    pointer-events:none;
+  }
+  .vocab-card.mastered .vocab-check-label{color:var(--success)}
+  .vocab-check-label .dot{width:6px;height:6px;border-radius:999px;background:currentColor;opacity:.6}
+
+  .vocab-body{min-width:0;padding-right:64px}
+  .vocab-en{font-family:var(--font-serif);font-size:18px;font-weight:600;line-height:1.35;color:var(--ink)}
+  .vocab-phonetic{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:4px}
+  .vocab-zh{font-size:14px;color:var(--ink);margin-top:6px}
+  .vocab-meta-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .vocab-scene-badge{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--paper);color:var(--ink-2)}
+  .vocab-tag{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--rule);color:var(--ink-2)}
+
+  /* 展开详情 */
+  .vocab-card-detail{
+    grid-column:1 / -1;
+    padding:12px 0 0;border-top:1px solid var(--rule);
+    margin-top:4px;
+  }
+  .vocab-detail-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+  .vocab-example{margin:6px 0 0;font-family:var(--font-serif);font-style:italic;font-size:14px;line-height:1.6;color:var(--ink)}
+  .vocab-example::before{content:"“"} .vocab-example::after{content:"”"}
+  .vocab-review-actions{margin-top:14px}
+  .vocab-review-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .vocab-review-btn{
+    flex:1 1 0;min-width:64px;min-height:44px;padding:8px 4px;
+    border-radius:6px;border:0;font-size:12px;font-family:inherit;cursor:pointer;color:var(--paper);
+  }
+  .vocab-review-btn.again{background:var(--primary)}
+  .vocab-review-btn.hard{background:var(--warning)}
+  .vocab-review-btn.good{background:var(--ink)}
+  .vocab-review-btn.easy{background:var(--success)}
+
+  /* Tab bar */
+  .tab-bar{flex:0 0 auto;display:flex;height:var(--tab-bar);padding:8px 8px calc(8px + var(--safe-bottom));background:var(--paper);border-top:1px solid var(--rule)}
+  .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;color:var(--ink-3);cursor:pointer;font-family:inherit;font-size:10px;padding:6px 0}
+  .tab-item[aria-selected="true"]{color:var(--primary)}
+  .tab-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7}
+</style>
+</head>
+<body>
+<div id="app">
+  <main class="page-outlet">
+    <div class="page">
+      <h1 class="page-title">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>
+        <span>词库</span>
+      </h1>
+      <div class="vocab-summary">
+        <span>共 100 词</span><span class="dot">·</span>
+        <span>已掌握 12</span><span class="dot">·</span>
+        <span>今日待复习 88</span>
+      </div>
+
+      <div class="vocab-sticky-tabs">
+        <div class="vocab-scene-tabs">
+          <button class="vocab-scene-tab active"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>全部</span></button>
+          <button class="vocab-scene-tab"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12h4l3-6 4 12 3-6h4"/></svg><span>旅行</span></button>
+          <button class="vocab-scene-tab"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span>日常</span></button>
+          <button class="vocab-scene-tab"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg><span>工作</span></button>
+        </div>
+      </div>
+
+      <label class="vocab-due-toggle">
+        <input type="checkbox">
+        <span>只看今日复习队列</span>
+      </label>
+
+      <div class="vocab-list">
+        <!-- 卡片 1：未掌握（默认） -->
+        <div class="vocab-card">
+          <button class="vocab-check" role="checkbox" aria-checked="false" aria-label="标为已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">Good morning! How did you sleep?</div>
+            <div class="vocab-phonetic">/ɡʊd ˈmɔːnɪŋ/</div>
+            <div class="vocab-zh">早上好！睡得怎么样？</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">打招呼</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片 2：未掌握展开态 -->
+        <div class="vocab-card">
+          <button class="vocab-check" role="checkbox" aria-checked="false" aria-label="标为已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">Long time no see!</div>
+            <div class="vocab-phonetic">/lɒŋ taɪm nəʊ siː/</div>
+            <div class="vocab-zh">好久不见！</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">打招呼</span>
+            </div>
+          </div>
+          <div class="vocab-card-detail">
+            <span class="vocab-detail-label">例句</span>
+            <p class="vocab-example">Hey Sarah, long time no see! How have you been?</p>
+
+            <div class="vocab-review-actions">
+              <span class="vocab-detail-label">复习评价</span>
+              <div class="vocab-review-btns">
+                <button class="vocab-review-btn again">不认识</button>
+                <button class="vocab-review-btn hard">模糊</button>
+                <button class="vocab-review-btn good">认识</button>
+                <button class="vocab-review-btn easy">很熟</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片 3：已掌握态（打勾 + paper-alt 底色 + ink-3 字色） -->
+        <div class="vocab-card mastered">
+          <button class="vocab-check" role="checkbox" aria-checked="true" aria-label="取消已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">Nice to meet you.</div>
+            <div class="vocab-phonetic">/naɪs tuː miːt juː/</div>
+            <div class="vocab-zh">很高兴认识你。</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">打招呼</span>
+            </div>
+          </div>
+          <span class="vocab-check-label"><span class="dot"></span>已掌握</span>
+        </div>
+
+        <!-- 更多卡片 -->
+        <div class="vocab-card">
+          <button class="vocab-check" role="checkbox" aria-checked="false" aria-label="标为已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">How's it going?</div>
+            <div class="vocab-phonetic">/haʊz ɪt ˈɡəʊɪŋ/</div>
+            <div class="vocab-zh">最近怎么样？</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">打招呼</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vocab-card mastered">
+          <button class="vocab-check" role="checkbox" aria-checked="true" aria-label="取消已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">See you later.</div>
+            <div class="vocab-phonetic">/siː juː ˈleɪtə/</div>
+            <div class="vocab-zh">回头见。</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">告别</span>
+            </div>
+          </div>
+          <span class="vocab-check-label"><span class="dot"></span>已掌握</span>
+        </div>
+
+        <div class="vocab-card">
+          <button class="vocab-check" role="checkbox" aria-checked="false" aria-label="标为已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">Have a good one.</div>
+            <div class="vocab-phonetic">/hæv ə ɡʊd wʌn/</div>
+            <div class="vocab-zh">祝你愉快。</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">告别</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <button class="vocab-check" role="checkbox" aria-checked="false" aria-label="标为已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">What's up?</div>
+            <div class="vocab-phonetic">/wɒts ʌp/</div>
+            <div class="vocab-zh">最近怎样？</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">打招呼</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vocab-card">
+          <button class="vocab-check" role="checkbox" aria-checked="false" aria-label="标为已掌握">
+            <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>
+          </button>
+          <div class="vocab-body">
+            <div class="vocab-en">Take care.</div>
+            <div class="vocab-phonetic">/teɪk keə/</div>
+            <div class="vocab-zh">保重。</div>
+            <div class="vocab-meta-row">
+              <span class="vocab-scene-badge">日常</span>
+              <span class="vocab-tag">告别</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="tab-bar">
+    <button class="tab-item"><svg viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/></svg><span>首页</span></button>
+    <button class="tab-item" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg><span>词库</span></button>
+    <button class="tab-item"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4V6z"/></svg><span>对话</span></button>
+    <button class="tab-item"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h10M4 15h16M4 20h10"/></svg><span>语法</span></button>
+    <button class="tab-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg><span>我</span></button>
+  </nav>
+</div>
+<script>
+  document.querySelectorAll('.vocab-check').forEach(function(cb){
+    cb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var on = cb.getAttribute('aria-checked') === 'true';
+      cb.setAttribute('aria-checked', on ? 'false' : 'true');
+      cb.closest('.vocab-card').classList.toggle('mastered', !on);
+      var label = cb.closest('.vocab-card').querySelector('.vocab-check-label');
+      if(label){
+        // no-op — 简化演示
+      }
+    });
+  });
+</script>
+</body>
+</html>

@@ -270,7 +270,10 @@ components:
     typography: "{typography.english-body}"
     padding: 4px
 
-  # ============ 徽章（学习状态） ============
+  # ============ 徽章（学习状态 · 纯语义标签，2026-09-10 t_30d5ddc8 起不可点） ============
+  # 关键改动：badge-* 是"这个词现在处于什么态"的纯语义 tag（无 button 元素、无 cursor:pointer），
+  # 状态变更改由词卡展开区的 segmented-control 负责（见下）。
+  # 视觉：小方框 kicker mono（字号 10 · letter-spacing 0.08em · text-transform: uppercase）。
   badge-new:
     backgroundColor: "{colors.primary-soft}"
     textColor: "{colors.primary}"
@@ -324,6 +327,29 @@ components:
     typography: "{typography.ui-s}"
     rounded: "{rounded.full}"
     padding: 6px
+
+  # ============ Sticky 顶栏容器（列表页顶部筛选栏） ============
+  # 用于词库场景 Tab、语法分级 chip 等"页面内二级筛选"，滚动时 sticky 到 top:0
+  # 毛玻璃底：α0.88 paper + backdrop-blur 14px（与艺术手册 nav-back-outline 同源）
+  # 底部 1px rule，与滚动内容形成物理"顶栏"
+  sticky-tabs:
+    backgroundColor: "{colors.paper}"     # 实际渲染：rgba(paper, 0.88) + backdrop-filter: blur(14px)
+    textColor: "{colors.ink-2}"
+    padding: 8px
+
+  # ============ Segmented Control（三态状态切换 · iOS 原生风格） ============
+  # 用于词卡展开区的"新词/学习中/已掌握"状态显式切换，替代原三态循环徽章点击。
+  # 语义色小圆点（primary/warning/success）打在文字左侧，选中态用 paper-2 底 + 微阴影 + 语义色文字。
+  segmented-control:
+    backgroundColor: "{colors.paper-alt}"
+    textColor: "{colors.ink-2}"
+    rounded: "{rounded.sm}"
+    padding: 3px
+  segmented-control-selected:
+    backgroundColor: "{colors.surface}"    # 白纸感"抬起"（唯一少量用到 surface 的场景）
+    textColor: "{colors.ink}"              # 具体段的语义色由 semantic 覆盖
+    rounded: "{rounded.sm}"
+    padding: 3px
 
   # ============ 页面顶部返回按钮（沿用 t_a312968d 全局约定） ============
   # 左上 40×40 胶囊，箭头 20px（详见 Do's 与决策记录）
@@ -452,7 +478,31 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 - IPA 音标：JetBrains Mono 11px `ink-3`
 - 中文释义：Inter 13px `ink-2`，包含 `<em>` 词性 → 释义主体 → 关联提示，`<em>` 用**书签红斜体**
 - 例句：Source Serif 4 12px italic `ink-3`，前后带引号
-- 右侧状态徽章：8px `xs` 圆角，10px kicker mono，宽 32-56px
+- 右侧状态徽章：8px `xs` 圆角，10px kicker mono，宽 32-56px。**2026-09-10 t_30d5ddc8 起改为纯语义标签**——是"这个词的状态"，不是"可点击切换"的按钮；状态变更改由展开区的 `segmented-control` 负责。
+
+### 词卡状态切换（segmented-control · 展开区内）
+
+**2026-09-10 t_30d5ddc8 决策**：三态循环点击徽章太不直观（"我不知道点一下会发生什么"），改为**展开词卡后显式选择**——iOS 系统级 UISegmentedControl 范式：
+
+- **控件位置**：词卡展开区，位于"例句"下方、"复习评价"上方；标签"状态"（`vocab-detail-label` kicker）与其他段一致。
+- **三段等分**：新词 / 学习中 / 已掌握，`grid-template-columns: 1fr 1fr 1fr`，容器 `paper-alt` 底 + 3px inner padding + `sm` (4px) 圆角。
+- **段内视觉**：每段 8px 4px padding，min-height 38px（容器 44px 满足 HIG 触控热区），语义色小圆点（6×6 primary/warning/success）左对齐 + 中文标签。
+- **选中态**：`surface` 底（唯一的白纸感"抬起"）+ `0 1px 2px rgba(28,27,24,.08)` 微阴影 + 语义色文字（新词→primary、学习中→warning、已掌握→success） + `font-weight: 600`。**不用 hover 态承载语义**（触屏无 hover）。
+- **caption 禁止**：不加"选一个：...熟练度"这类多余解释——控件本身足够清楚，caption 是过度设计。仅保留左上 `vocab-detail-label` "状态" 二字。
+
+### 列表页 sticky 顶栏（sticky-tabs 容器）
+
+**2026-09-10 t_30d5ddc8 决策**：词库场景 Tab（全部/旅行/日常/工作）在向上滚动时**必须 sticky**——iOS 原生列表页标准做法（`.page-outlet` 是滚动容器时用 `position: sticky; top: 0`）。
+
+- **容器**：`margin: 0 -20px 12px`（出血到屏边）+ `padding: 8px 20px 10px` + `position: sticky; top: 0; z-index: 10`。
+- **底色**：`rgba(247, 243, 236, 0.88)` + `backdrop-filter: blur(14px)` + `-webkit-backdrop-filter: blur(14px)`——与艺术手册 `nav-back-outline` 同一雾玻璃语言。**不用纯纸底**：滚动内容从底部溜进毛玻璃下方形成"顶栏"物理层次，符合 iPhone 用户对 UITableView section header 的直觉。
+- **底部分割**：`border-bottom: 1px solid var(--color-rule)`，形成"顶栏 vs 内容"的物理边界。
+- **Tab 栏本身样式沿用现有 `.vocab-scene-tab`**（`min-height: 44px` HIG 已达标）；未 sticky 前视觉与 sticky 后一致。
+- **汇总条 + 只看今日复习开关不 sticky**：这两个是次要控件，跟着内容滚走没有关键操作损失。**只有场景 Tab 需要常驻**。
+
+### Sticky 顶栏（其他列表页复用）
+
+`sticky-tabs` 是通用容器 token，未来任何列表页顶部的二级筛选栏（语法分级 chip、对话场景 chip、成就类型 chip）都应复用此规格。当前审查（2026-09-10）：语法页/对话页**暂无顶部 Tab**（分类以内容分节呈现），无需 sticky；如未来引入需一并应用。
 
 ### Session hero card（深墨绿，可选强调）
 
@@ -500,6 +550,24 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 - **hover 不作为唯一状态载体**——赤拔只用 iPhone，触屏没有 hover，激活态用 `:active` 和填充色变化。
 
 ## Decision Log
+
+### 2026-09-10 · t_30d5ddc8 · 词库体验优化（Tab 常驻 + 状态切换简化）
+
+**决策**：解决词库两个体验问题——
+1. **场景 Tab 常驻**：向上滚动时 `.vocab-scene-tabs` 用 `position: sticky; top: 0` 固定在 `.page-outlet` 顶端，α0.88 paper 毛玻璃底 + blur 14px，1px rule 底分割。汇总条与"只看今日复习"随内容滚走。
+2. **状态徽章去按钮化 + 展开区 Segmented Control**：`badge-new/learning/mastered` 从三态循环点击按钮改为纯语义标签（无 button 元素、无 cursor:pointer）；词卡展开后加显式 Segmented Control（`grid-template-columns: 1fr 1fr 1fr` + `paper-alt` 底 + 三段等分），iOS UISegmentedControl 范式。三态语义完整保留（新词/学习中/已掌握），SM-2 中间态不丢。
+
+**依据**：
+1. 赤拔原话：\"学习中，新词，这个状态变更的多级是什么，不理解\"——问题的根源是"徽章看起来像装饰性 tag、点了才发现是按钮"。**最直接的翻译**是"徽章就是标签、操作放到明确的控件里"。
+2. 三案自评 42/36/46——**C · Segmented 胜**。A · Swipe（42）：iOS 原生手势，但列表以浏览为主时误触率高；作为高手快捷键留在 F1（P2）。B · Checkbox（36）：**丢"学习中"中间态**是致命信度损失（SM-2 算法在用），且 checkbox 挤压英文断行破坏 DESIGN.md「让英文像书本」原则。C · Segmented（46）保留全部三态语义 + 收起态列表最纯 + iPhone 用户对 Segmented 最熟悉。
+3. **从 A 案吸收**：徽章视觉锁死为 kicker mono 标签（10px + letter-spacing 0.08em + uppercase）+ Sticky 顶栏毛玻璃语言。**从 B 案吸收**：Segmented 的 "已掌握" 段选中态用微阴影 + 语义色文字，加强"这是终态"的抬起感。
+4. iOS HIG 「Segmented controls give people a compact way to select between mutually exclusive options.」——三态互斥选择是 Segmented Control 的教科书用例。
+5. 全站审查（2026-09-10）：首页/对话页/语法页无同类"滚动时关键操作消失"或"循环点徽章"问题——仅词库有此症。
+
+**风险与预案**：
+- **展开一次才能改状态是不是路径太长？** 之前是"卡上直接点徽章循环"，现在必须"点卡展开→点 Segmented"。**评估**：状态变更本身是低频操作（不是每次浏览都改），路径长 = 意图明确 = 不误触；用户第一次改状态学到 Segmented 位置后无学习成本。**兜底**：如果实际使用后发现仍频繁，可在 F1 追加 A 案的 Swipe Action 作为高手通道（不冲突）。
+- **Sticky 顶栏毛玻璃在低端 iPhone 掉性能？** `backdrop-filter: blur(14px)` 在 iPhone 12+ 无性能问题；旧机 fallback 到 α0.95 不透明底（`@supports not (backdrop-filter: blur(1px))`）。
+- **首次进入词库如何告知"点卡片可改状态"？** 词库首次访问显示一次性 tooltip："点开词卡可修改学习状态"，`localStorage.getItem('vocabStatusHintDismissed')` 持久化，右上角 × 关闭。文案见交付说明 F. HTML/JS 变更。
 
 ### 2026-09-10 · t_b06616d2 · 评估初始化改为全选择交互
 **决策**：水平评估五轮流程**去除所有文字输入**（原 R1 三个 text input、R4 写作 textarea），全部改为选择卡片。新增 `choice-row`（目录卡）+ `chip-row`（横排等宽 chip）+ `choice-paragraph`（段落卡）三个 component tokens。R4 写作样本改为**"三段英文自我介绍选一段最像你能说出来的水平"**——保留英文文本作为评估信号，代替开放输入。

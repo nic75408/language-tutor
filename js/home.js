@@ -62,7 +62,7 @@
     if (!completed) {
       container.innerHTML =
         '<div class="page" data-page="home">' +
-        '<h1 class="page-title">📊 首页</h1>' +
+        '<h1 class="page-title">首页</h1>' +
         '<div class="home-onboard-banner" data-testid="onboard-banner">' +
         '<p class="home-onboard-text">完成评估，解锁你的专属学习计划</p>' +
         '<button class="assess-btn-primary" id="home-start-assess" data-testid="home-start-assess">开始评估</button>' +
@@ -89,7 +89,7 @@
 
     container.innerHTML =
       '<div class="page" data-page="home">' +
-      '<h1 class="page-title">📊 首页</h1>' +
+      '<h1 class="page-title">首页</h1>' +
       '<div class="home-level-card">当前水平：<strong>' + esc(result.level) + '</strong></div>' +
 
       '<div class="home-dashboard-row">' +
@@ -101,7 +101,7 @@
         '</div>' +
         '<div class="home-streak-card" data-testid="home-streak">' +
           '<span class="home-streak-num">' + streak + '</span>' +
-          '<span class="home-streak-label">🔥 连续学习天数</span>' +
+          '<span class="home-streak-label">连续学习 · 天</span>' +
         '</div>' +
       '</div>' +
 

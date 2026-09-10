@@ -211,12 +211,12 @@ components:
     rounded: "{rounded.sm}"
     padding: 12px
 
-  # 圆形 mic 按钮（对话页语音输入，40px）
+  # 圆形 mic 按钮（对话页语音输入，44px 命中 HIG tap target）
   button-mic:
     backgroundColor: "{colors.primary}"
     textColor: "#FFFFFF"
     rounded: "{rounded.full}"
-    size: 40px
+    size: 44px
 
   # ============ 输入框（对话 composer） ============
   # textColor 是"用户已输入的文字"色；占位符走 CSS ::placeholder，用 ink-3。
@@ -226,7 +226,7 @@ components:
     typography: "{typography.body-m}"
     rounded: "{rounded.full}"
     padding: 16px
-    height: 40px
+    height: 44px
 
   # ============ 卡片 ============
   card:
@@ -471,3 +471,60 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 
 ### 沿用：全局返回/退出交互（源自 artbook t_a312968d）
 所有二级页面统一左上角 40×40 雾玻璃胶囊 + 20px 左箭头返回按钮（`page-header-back`）；右滑边缘 ≥80px 触发返回（**起于左边缘、向右方向滑**——iOS 系统级手势方向）；push 栈模型（全站无 modal sheet）。此约定不由本任务发起，来自赤拔在艺术手册项目里已拍板的决定，语言学习助手直接沿用。
+
+### 2026-09-10 · t_9aeaf1dc · iOS HIG 全局交互审查
+
+**决策**：对全站做一轮 iOS HIG 合规审查，发现 17 处问题（audit 见 `AUDIT-ios-hig.md`），本卡实施 S1（6 处 spec 违反）+ S2（4 处 HIG 违反）+ D1/D2/D3（3 处品味自决）+ S4-4（`🔥` emoji 去除）。
+
+**关键 spec 修订（token）**：
+- `button-mic.size` 40px → 44px（HIG tap target）
+- `input-text.height` 40px → 44px（同）
+
+**关键规则（进入 Do's）**：见下节「HIG 触控热区规则」。
+
+**依据**：
+1. iOS HIG「Provide ample touch targets for interactive elements. Try to maintain a minimum tappable area of 44pt x 44pt for all controls.」
+2. 赤拔只在 iPhone 上用本产品——桌面 hover 态在真机上不存在，触控热区不足是**功能性缺陷**而非风格差异
+3. 与 DESIGN.md「视觉尺寸」的张力用「视觉 N · 热区 44」透明扩展器解决（D1 A 方案 24/25 胜）
+
+## HIG 触控热区规则（Do's 补充）
+
+**核心**：所有可点击控件热区 ≥ 44 × 44pt，视觉尺寸可以更小。视觉是 DESIGN.md 的语言，触控是 HIG 硬底线。
+
+**扩展手法（三选一，按场景）**：
+
+1. **透明 `::before` 扩展器**（视觉小、独立控件）
+   ```css
+   .checkbox { width:20px; height:20px; position:relative; }
+   .checkbox::before { content:''; position:absolute; inset:-12px; /* 44 */ }
+   ```
+   用于：checkbox、小图标按钮。DESIGN.md 数值一字不改。
+
+2. **`min-height: 44px` + inline-flex**（label / row / chip）
+   ```css
+   .label-row { display:flex; align-items:center; min-height:44px; padding:6px 0; }
+   ```
+   用于：radio label、`<input>` 关联 label、场景 chip、设置项。
+
+3. **视觉边框 `::before` 分离**（icon button，视觉小胶囊+大热区）
+   ```css
+   .icon-btn { width:44px; height:44px; background:transparent; position:relative; }
+   .icon-btn::before {
+     content:''; position:absolute; width:34px; height:34px;
+     border-radius:999px; border:1px solid var(--color-rule); background:var(--color-paper);
+     z-index:-1;
+   }
+   ```
+   用于：对话工具栏图标按钮、"翻译"、"播放"这类辅助控件。
+
+**明确清单**：任何 `<button>`、`<a>`、`<label>` 关联的可点击元素，只要计算高 < 44 或宽 < 44，必须用上述手法之一扩展。审查时 QA 用 DevTools 查每个可点击元素的 bounding rect。
+
+**特例**：内容 tag（如词条上「日常」「打招呼」如果不可点击）不算 tap target，可保持 ~24px。可点/不可点的判断以 DOM 是否绑 event handler / `<a href>` / `<button>` 为准。
+
+### Do（补充 · iOS HIG）
+- 所有 tap 目标热区 ≥ 44×44pt（视觉不必 44）——见上「HIG 触控热区规则」
+- 返回按钮字符统一 `←` (U+2190)，禁用 `‹`（弯尖括号）——iOS 系统级返回全是左箭头
+- 页面 title 不加 emoji 前缀（`📊 首页` ✗；`首页` ✓）——emoji 破坏"编辑室"气质；产品内容层的 emoji（场景、任务类型）另论
+- Streak / 长期数据用古铜金卡 + mono 数字 + kicker 副标签（`连续学习 · 天`），不用 `🔥` emoji——emoji 色彩来自 iOS 系统色板，与 `--color-gold` 视觉冲突
+- Composer 与底部 tab-bar 之间用 `border-top: 1px solid var(--color-rule)` 视觉分隔，避免误触
+- 复习 4 按钮（Again/Hard/Good/Easy）用 DESIGN.md 色板（primary/warning/ink/success），不用 Anki 默认红橙蓝绿

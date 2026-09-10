@@ -46,7 +46,7 @@
 
     container.innerHTML =
       '<div class="page" data-page="grammar">' +
-        '<h1 class="page-title">📐 语法讲堂</h1>' +
+        '<h1 class="page-title">语法讲堂</h1>' +
         '<div class="grammar-list">' + cards + '</div>' +
       '</div>';
 

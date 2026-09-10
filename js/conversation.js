@@ -38,7 +38,7 @@
 
   // ---------- 入口页 ----------
   function renderEntry(container) {
-    container.innerHTML = '<div class="page" data-page="conversation"><h1 class="page-title">💬 对话</h1><div id="conv-entry-body"></div></div>';
+    container.innerHTML = '<div class="page" data-page="conversation"><h1 class="page-title">对话</h1><div id="conv-entry-body"></div></div>';
     var body = container.querySelector('#conv-entry-body');
     loadScenarios().then(function (scenarios) {
       var byCategory = {};
@@ -95,7 +95,7 @@
         body.innerHTML = '<p class="review-empty">场景不存在。</p>';
         return;
       }
-      var html = '<button class="page-header-back" data-action="back">‹</button>';
+      var html = '<button class="page-header-back" data-action="back" aria-label="返回">←</button>';
       html += '<div class="conv-setup">';
       html += '<div class="conv-setup-card">';
       html += '<span class="icon-big">' + scene.icon + '</span>';
@@ -162,7 +162,7 @@
       var title = currentSession.sceneId ? currentSession.sceneIcon + ' ' + currentSession.sceneTitle : '🗨️ 自由对话';
       var autoReadOn = window.Speech.getAutoRead();
       body.innerHTML =
-        '<button class="page-header-back" data-action="back">‹</button>' +
+        '<button class="page-header-back" data-action="back" aria-label="返回">←</button>' +
         '<div class="conv-chat">' +
         '<div class="conv-chat-header">' +
         '<span class="title">' + escapeHtml(title) + '</span>' +
@@ -375,7 +375,7 @@
       return;
     }
     var review = session.review || buildReview(session);
-    var html = '<button class="page-header-back" data-action="back">‹</button>';
+    var html = '<button class="page-header-back" data-action="back" aria-label="返回">←</button>';
     html += '<div class="conv-review">';
     html += '<div class="review-hero"><div class="title">对话复盘</div><div class="sub">' + escapeHtml(session.sceneTitle) + '</div></div>';
 
@@ -412,7 +412,7 @@
     container.innerHTML = '<div class="page" data-page="conversation"><div id="conv-history-body"></div></div>';
     var body = container.querySelector('#conv-history-body');
     var list = window.ConversationStore.listSorted();
-    var html = '<button class="page-header-back" data-action="back">‹</button>';
+    var html = '<button class="page-header-back" data-action="back" aria-label="返回">←</button>';
     html += '<h1 class="page-title">历史对话</h1>';
     if (list.length === 0) {
       html += '<p class="review-empty">还没有对话记录，去开始第一次练习吧。</p>';

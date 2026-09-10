@@ -126,7 +126,7 @@
     container.innerHTML =
       '<div class="page plan-page" data-page="plan">' +
         '<button class="grammar-header-back" id="plan-back" aria-label="返回">←</button>' +
-        '<h1 class="page-title">📋 4 周学习计划</h1>' +
+        '<h1 class="page-title">4 周学习计划</h1>' +
         '<div class="plan-overview">' +
           '<div class="plan-overview-label">总体进度</div>' +
           '<div class="plan-overview-bar"><div class="plan-overview-bar-fill" style="width:' + overall + '%"></div></div>' +

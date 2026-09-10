@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>C · Studio 现代工具</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #FBFBFA;   /* 纸白（微暖，非纯白） */
+    --surface:    #FFFFFF;   /* 卡片纯白 */
+    --surface-2:  #F3F3F1;   /* 分区/输入 */
+    --ink:        #17171A;   /* 近黑（含 3% 冷调） */
+    --ink-2:      #55555C;   /* 二级 */
+    --ink-3:      #8A8A93;   /* 三级 */
+    --rule:       rgba(23,23,26,0.08);
+    --rule-2:     rgba(23,23,26,0.05);
+    --accent:     #4759F5;   /* 靛蓝，工具色，不是品牌色 */
+    --accent-soft:#EEF0FF;
+    --success:    #17936A;
+    --warning:    #C67C1B;
+    --danger:     #D4483F;
+    --sans:    "Inter", -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+    --sans-cn: "Noto Sans SC", "PingFang SC", var(--sans);
+    --mono:    "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  html, body { background: #2b2926; }
+  body { font-family: var(--sans); color: var(--ink); padding: 32px 24px; min-height: 100vh; }
+  .header { color: #E8DEC7; max-width: 1260px; margin: 0 auto 24px; }
+  .header h1 { font-family: var(--sans); font-size: 26px; font-weight: 600; letter-spacing: -0.015em; }
+  .header p { font-size: 13px; color: #A69C86; margin-top: 6px; }
+  .stage { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; max-width: 1260px; margin: 0 auto; }
+  .phone {
+    width: 390px; height: 844px; background: var(--bg); border-radius: 44px; overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.35), 0 0 0 8px #111, 0 0 0 9px #333;
+    display: flex; flex-direction: column; position: relative;
+  }
+  .phone-label { position: absolute; top: -22px; left: 0; right: 0; text-align: center; font-family: var(--mono); font-size: 11px; color: #A69C86; letter-spacing: 0.08em; }
+
+  .statusbar { height: 44px; padding: 14px 22px 0; display: flex; justify-content: space-between; align-items: flex-start; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .statusbar .right { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+
+  .appbar {
+    padding: 8px 20px 12px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .logo {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--ink);
+    display: grid; place-items: center; color: var(--bg);
+    font-family: var(--sans); font-weight: 700; font-size: 12px; letter-spacing: -0.02em;
+  }
+  .brand-name { font-family: var(--sans); font-size: 15px; font-weight: 600; letter-spacing: -0.015em; }
+  .brand-cn { font-family: var(--sans-cn); font-size: 11px; color: var(--ink-3); margin-left: 4px; }
+  .iconbtn {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--rule);
+  }
+
+  .body { flex: 1; overflow-y: auto; padding: 4px 20px 8px; }
+
+  /* Tab bar */
+  .tabbar {
+    height: 82px; padding: 8px 8px 22px; display: grid; grid-template-columns: repeat(5, 1fr);
+    background: var(--bg);
+    border-top: 1px solid var(--rule);
+  }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--ink-3); font-size: 10px; font-weight: 500; font-family: var(--sans); }
+  .tab.active { color: var(--ink); }
+  .tab.active .ico { color: var(--accent); }
+  .ico { width: 22px; height: 22px; }
+
+  /* Home */
+  .hello {
+    font-family: var(--sans); font-size: 14px; color: var(--ink-2); font-weight: 500;
+    margin-top: 4px;
+  }
+  .h1 { font-family: var(--sans); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-top: 4px; }
+  .sub-cn { font-family: var(--sans-cn); font-size: 13px; color: var(--ink-2); margin-top: 8px; line-height: 1.55; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
+    padding: 18px;
+    margin-top: 20px;
+  }
+  .card-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .card-head .badge {
+    padding: 3px 8px; background: var(--accent-soft); color: var(--accent);
+    border-radius: 4px; letter-spacing: 0.06em; font-weight: 500;
+  }
+  .card-title { font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin-top: 10px; }
+  .card-meta-cn { font-family: var(--sans-cn); font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+
+  .progress-block { margin-top: 18px; }
+  .bar {
+    height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden;
+  }
+  .bar > i { display: block; height: 100%; background: var(--accent); width: 44%; border-radius: 3px; }
+  .bar-legend {
+    display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 8px;
+    letter-spacing: 0.03em;
+  }
+  .bar-legend .val { color: var(--ink); font-weight: 600; }
+
+  .cta {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 16px; height: 44px;
+    background: var(--ink); color: var(--bg);
+    border-radius: 10px; font-family: var(--sans); font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+  }
+
+  .section-h {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 24px 0 10px;
+  }
+
+  .task {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .checkbox { width: 18px; height: 18px; border: 1.5px solid var(--ink-3); border-radius: 5px; flex-shrink: 0; }
+  .task.done .checkbox { background: var(--accent); border-color: var(--accent); position: relative; }
+  .task.done .checkbox::after {
+    content: ""; position: absolute; left: 3px; top: 1px; width: 5px; height: 9px;
+    border: 2px solid white; border-top: 0; border-left: 0; transform: rotate(45deg);
+  }
+  .task .t-body { flex: 1; }
+  .task .t-name { font-family: var(--sans-cn); font-size: 14px; font-weight: 500; }
+  .task.done .t-name { color: var(--ink-3); text-decoration: line-through; }
+  .task .t-meta { font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.04em; margin-top: 2px; }
+
+  /* Chat */
+  .chat-appbar {
+    padding: 8px 16px 14px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .back-btn {
+    width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--rule);
+    display: grid; place-items: center; color: var(--ink-2);
+  }
+  .scene-info { flex: 1; }
+  .scene-info .name { font-family: var(--sans); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .scene-info .meta { font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.06em; margin-top: 2px; }
+
+  .chat-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; flex: 1; overflow-y: auto; }
+  .msg-t { max-width: 88%; }
+  .msg-t .role {
+    display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;
+    font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .role-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .msg-t .bubble {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 4px 14px 14px 14px;
+    padding: 12px 14px;
+  }
+  .msg-t .en { font-family: var(--sans); font-size: 15px; font-weight: 500; line-height: 1.4; letter-spacing: -0.005em; }
+  .msg-t .en strong { color: var(--accent); font-weight: 600; }
+  .msg-t .zh {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rule-2);
+    font-family: var(--sans-cn); font-size: 12px; color: var(--ink-2); line-height: 1.5;
+  }
+  .msg-t .zh em { font-style: normal; color: var(--accent); font-weight: 500; }
+  .msg-u { align-self: flex-end; max-width: 84%; }
+  .msg-u .bubble {
+    background: var(--ink); color: var(--bg); border-radius: 14px 14px 4px 14px;
+    padding: 10px 14px; font-family: var(--sans); font-size: 15px; font-weight: 500; line-height: 1.35;
+  }
+  .msg-u .fix {
+    margin-top: 6px; display: flex; align-items: center; gap: 6px; justify-content: flex-end;
+    font-family: var(--mono); font-size: 10px; color: var(--danger); letter-spacing: 0.03em;
+  }
+  .fix .k { padding: 2px 6px; background: rgba(212,72,63,0.1); border-radius: 3px; }
+
+  .composer {
+    border-top: 1px solid var(--rule); padding: 10px 12px 14px;
+    display: flex; align-items: center; gap: 8px; background: var(--bg);
+  }
+  .input {
+    flex: 1; height: 40px; background: var(--surface-2); border-radius: 20px;
+    padding: 0 16px; font-family: var(--sans); font-size: 14px; color: var(--ink-3);
+    display: flex; align-items: center;
+  }
+  .mic {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: white;
+    display: grid; place-items: center;
+    box-shadow: 0 2px 8px rgba(71,89,245,0.35);
+  }
+
+  /* Vocab */
+  .vocab-title { padding: 8px 20px 4px; }
+  .vocab-title .h { font-family: var(--sans); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+  .vocab-title .meta { font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.08em; margin-top: 2px; }
+
+  .search {
+    margin: 12px 20px 0; height: 40px; background: var(--surface-2); border-radius: 10px;
+    display: flex; align-items: center; gap: 8px; padding: 0 14px;
+    color: var(--ink-3); font-size: 14px;
+  }
+  .filter-chips {
+    display: flex; gap: 8px; padding: 14px 20px 4px; overflow-x: auto;
+  }
+  .chip {
+    padding: 6px 12px; background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; font-family: var(--sans); font-size: 12px; color: var(--ink-2); font-weight: 500;
+    white-space: nowrap;
+  }
+  .chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .chip .n { font-family: var(--mono); font-size: 10px; opacity: 0.7; margin-left: 4px; }
+
+  .entries { padding: 4px 20px 8px; }
+  .entry {
+    padding: 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px;
+    margin-bottom: 8px;
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  .w-en { font-family: var(--sans); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .w-ipa { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .w-zh { font-family: var(--sans-cn); font-size: 13px; color: var(--ink-2); margin-top: 8px; line-height: 1.5; }
+  .w-zh strong { color: var(--ink); font-weight: 500; }
+  .w-ex { font-family: var(--sans); font-size: 12px; color: var(--ink-3); font-style: italic; margin-top: 4px; line-height: 1.4; }
+  .state {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 4px; flex-shrink: 0; height: fit-content;
+    font-weight: 500;
+  }
+  .s-new  { background: var(--accent-soft); color: var(--accent); }
+  .s-lrn  { background: rgba(198,124,27,0.12); color: var(--warning); }
+  .s-mst  { background: rgba(23,147,106,0.12); color: var(--success); }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>C · Studio 现代工具</h1>
+    <p>「一台精密仪器」的意象。近黑 + 纸白 + 靛蓝工具色，Inter + Noto Sans SC，圆角克制，全无衬线。灵感：Linear、Cal.com、Vercel、iOS Reminders。</p>
+  </div>
+
+  <div class="stage">
+
+    <!-- HOME -->
+    <div class="phone">
+      <div class="phone-label">Home 首页</div>
+      <div class="statusbar"><span>9:41</span><span class="right">•••• 5G ▮▮▮</span></div>
+      <div class="appbar">
+        <div class="brand">
+          <div class="logo">t</div>
+          <div>
+            <div class="brand-name">Tutor <span class="brand-cn">私教</span></div>
+          </div>
+        </div>
+        <div class="iconbtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2a7 7 0 0 0-7 7v4l-2 3h18l-2-3V9a7 7 0 0 0-7-7zM9 20a3 3 0 0 0 6 0"/></svg>
+        </div>
+      </div>
+      <div class="body">
+        <div class="hello">Good morning · 早上好</div>
+        <div class="h1">今天从<br>咖啡店点单开始。</div>
+        <div class="sub-cn">3 项任务 · 约 22 分钟，你的连续第 12 天。</div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>Today's session</span>
+            <span class="badge">Day 23</span>
+          </div>
+          <div class="card-title">Ordering at a café</div>
+          <div class="card-meta-cn">日常场景 · Week 3 / 4</div>
+
+          <div class="progress-block">
+            <div class="bar"><i></i></div>
+            <div class="bar-legend">
+              <span>4 周计划进度</span>
+              <span class="val">44%</span>
+            </div>
+          </div>
+          <div class="cta">
+            开始今日
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+
+        <div class="section-h">今日 · Today</div>
+        <div class="task done">
+          <div class="checkbox"></div>
+          <div class="t-body">
+            <div class="t-name">复习昨日 8 个词</div>
+            <div class="t-meta">VOCAB · 4 MIN</div>
+          </div>
+        </div>
+        <div class="task">
+          <div class="checkbox"></div>
+          <div class="t-body">
+            <div class="t-name">咖啡店场景对话</div>
+            <div class="t-meta">CONVERSATION · 12 MIN</div>
+          </div>
+        </div>
+        <div class="task">
+          <div class="checkbox"></div>
+          <div class="t-body">
+            <div class="t-name">语法：现在完成时</div>
+            <div class="t-meta">GRAMMAR · 6 MIN</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab active">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>
+          首页
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="14" height="17" rx="2"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>
+          词库
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4 4v-4H7a2 2 0 0 1-2-2z"/></svg>
+          对话
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h14M5 9h10M5 14h14M5 19h10"/></svg>
+          语法
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+          我
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="phone">
+      <div class="phone-label">Conversation 对话</div>
+      <div class="statusbar"><span>9:41</span><span class="right">•••• 5G ▮▮▮</span></div>
+      <div class="chat-appbar">
+        <div class="back-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="scene-info">
+          <div class="name">Ordering at a café</div>
+          <div class="meta">BARISTA · TURN 3 / ~10 · LEVEL B1</div>
+        </div>
+        <div class="back-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/></svg>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="msg-t">
+          <div class="role"><span class="role-dot"></span> BARISTA</div>
+          <div class="bubble">
+            <div class="en">Hi there! What can I get started for you today?</div>
+            <div class="zh">起手常见句式：<em>What can I get started for you?</em> / <em>What'll it be?</em> 都比 <em>What do you want</em> 自然得多。</div>
+          </div>
+        </div>
+        <div class="msg-u">
+          <div class="bubble">I would like a large latte, please.</div>
+        </div>
+        <div class="msg-t">
+          <div class="role"><span class="role-dot"></span> BARISTA</div>
+          <div class="bubble">
+            <div class="en">Perfect. Whole milk, oat, or something else?</div>
+            <div class="zh">牛奶类型：<em>oat</em> 燕麦 · <em>almond</em> 杏仁 · <em>whole</em> 全脂 · <em>skim</em> 脱脂。</div>
+          </div>
+        </div>
+        <div class="msg-u">
+          <div class="bubble">Oat milk. And can I get a extra shot?</div>
+          <div class="fix">
+            <span class="k">a</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            <span class="k">an</span>
+            EXTRA SHOT
+          </div>
+        </div>
+        <div class="msg-t">
+          <div class="role"><span class="role-dot"></span> BARISTA</div>
+          <div class="bubble">
+            <div class="en">You got it. That's <strong>$6.25</strong>. Cash or card?</div>
+          </div>
+        </div>
+      </div>
+      <div class="composer">
+        <div class="input">Type or tap the mic…</div>
+        <div class="mic">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>首页
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="14" height="17" rx="2"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>词库
+        </div>
+        <div class="tab active">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4 4v-4H7a2 2 0 0 1-2-2z"/></svg>对话
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h14M5 9h10M5 14h14M5 19h10"/></svg>语法
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>我
+        </div>
+      </div>
+    </div>
+
+    <!-- VOCAB -->
+    <div class="phone">
+      <div class="phone-label">Vocabulary 词库</div>
+      <div class="statusbar"><span>9:41</span><span class="right">•••• 5G ▮▮▮</span></div>
+      <div class="vocab-title">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div class="h">Vocabulary</div>
+            <div class="meta">100 CORE PHRASES</div>
+          </div>
+          <div class="iconbtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        搜索单词或场景…
+      </div>
+
+      <div class="filter-chips">
+        <div class="chip on">All <span class="n">100</span></div>
+        <div class="chip">✈ Travel <span class="n">30</span></div>
+        <div class="chip">☕ Daily <span class="n">30</span></div>
+        <div class="chip">💼 Work <span class="n">40</span></div>
+      </div>
+
+      <div class="entries">
+        <div class="entry">
+          <div style="flex:1;">
+            <div class="w-en">get started</div>
+            <div class="w-ipa">/ɡet ˈstɑːrtɪd/</div>
+            <div class="w-zh">动词短语 · <strong>开始（做事）</strong>。比 start 更口语。</div>
+            <div class="w-ex">"What can I get started for you today?"</div>
+          </div>
+          <div class="state s-lrn">learning</div>
+        </div>
+        <div class="entry">
+          <div style="flex:1;">
+            <div class="w-en">You got it</div>
+            <div class="w-ipa">/juː ɡɑt ɪt/</div>
+            <div class="w-zh">应答 · <strong>没问题</strong>，比 OK/Sure 更热情。</div>
+            <div class="w-ex">"Oat milk please." — "You got it."</div>
+          </div>
+          <div class="state s-new">new</div>
+        </div>
+        <div class="entry">
+          <div style="flex:1;">
+            <div class="w-en">grab a coffee</div>
+            <div class="w-ipa">/ɡræb ə ˈkɔːfi/</div>
+            <div class="w-zh">动词短语 · <strong>随手买杯咖啡</strong>。</div>
+            <div class="w-ex">"Wanna grab a coffee after this?"</div>
+          </div>
+          <div class="state s-mst">mastered</div>
+        </div>
+        <div class="entry">
+          <div style="flex:1;">
+            <div class="w-en">for here or to go</div>
+            <div class="w-ipa">/fɔːr hɪər ɔːr tə ɡoʊ/</div>
+            <div class="w-zh">问句 · <strong>店内喝还是带走？</strong></div>
+            <div class="w-ex">"For here or to go?" — "To go, please."</div>
+          </div>
+          <div class="state s-new">new</div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>首页
+        </div>
+        <div class="tab active">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="14" height="17" rx="2"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>词库
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4 4v-4H7a2 2 0 0 1-2-2z"/></svg>对话
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h14M5 9h10M5 14h14M5 19h10"/></svg>语法
+        </div>
+        <div class="tab">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>我
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

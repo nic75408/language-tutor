@@ -97,7 +97,7 @@
 
     container.innerHTML =
       '<div class="page" data-page="profile">' +
-      '<h1 class="page-title">👤 我</h1>' +
+      '<h1 class="page-title">我</h1>' +
       levelSectionHtml +
       dashboardHtml +
       weakSectionHtml +

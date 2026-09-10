@@ -384,11 +384,13 @@ body {
 }
 
 .grammar-quiz-option {
+  /* HIG · tap target ≥ 44（2026-09-10 t_9aeaf1dc） */
   text-align: left;
   background: var(--gr-paper);
   border: 1px solid var(--gr-rule);
   border-radius: 4px;
   padding: 10px 12px;
+  min-height: 44px;
   font-size: 14px;
   color: var(--gr-ink);
   cursor: pointer;
@@ -491,10 +493,12 @@ body {
 }
 
 .vocab-scene-tab {
+  /* HIG · S2 tap target ≥ 44（2026-09-10 t_9aeaf1dc） */
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 4px;
+  min-height: 44px;
   padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid var(--color-border);
@@ -507,9 +511,9 @@ body {
 }
 
 .vocab-scene-tab.active {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: #fff;
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-paper);
 }
 
 .vocab-scene-emoji {
@@ -517,13 +521,22 @@ body {
 }
 
 .vocab-due-toggle {
+  /* label 整行热区 ≥ 44 —— HIG · S2-1（2026-09-10 t_9aeaf1dc） */
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 0;
   font-size: 13px;
   color: var(--color-text-secondary);
   margin-bottom: 12px;
   cursor: pointer;
+}
+.vocab-due-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-primary);
 }
 
 .vocab-list {
@@ -542,7 +555,7 @@ body {
 .vocab-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -575,19 +588,20 @@ body {
   white-space: nowrap;
 }
 
+/* Status badges — DESIGN.md badge-* tokens（S1-1 修 · 2026-09-10 t_9aeaf1dc） */
 .vocab-status-badge.status-new {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .vocab-status-badge.status-learning {
-  background: #fff7ed;
-  color: #c2410c;
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
 }
 
 .vocab-status-badge.status-mastered {
-  background: #ecfdf5;
-  color: #059669;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .vocab-phonetic {
@@ -658,32 +672,35 @@ body {
   flex-wrap: wrap;
 }
 
+/* SM-2 复习按钮 —— DESIGN.md 色板（S1-4 修 · 2026-09-10 t_9aeaf1dc）
+   Again = primary（书签红纠错）/ Hard = warning / Good = ink（默认继续）/ Easy = success */
 .vocab-review-btn {
   flex: 1 1 0;
   min-width: 64px;
+  min-height: 44px; /* HIG · S2-1 tap target */
   padding: 8px 4px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: none;
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
-  color: #fff;
+  color: var(--color-paper);
 }
 
 .vocab-review-btn.again {
-  background: #ef4444;
+  background: var(--color-primary);
 }
 
 .vocab-review-btn.hard {
-  background: #f59e0b;
+  background: var(--color-warning);
 }
 
 .vocab-review-btn.good {
-  background: #3b82f6;
+  background: var(--color-ink);
 }
 
 .vocab-review-btn.easy {
-  background: #10b981;
+  background: var(--color-success);
 }
 
 /* ==========================================================================
@@ -806,10 +823,18 @@ body {
 }
 
 .assess-radio {
-  display: block;
+  /* HIG · label 整行 ≥ 44 tap target（2026-09-10 t_9aeaf1dc） */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
   font-size: 14px;
   padding: 6px 0;
   color: var(--assess-ink-2);
+  cursor: pointer;
+}
+.assess-radio input {
+  accent-color: var(--assess-primary);
 }
 
 .assess-vocab-grid {
@@ -819,12 +844,21 @@ body {
 }
 
 .assess-chip-check {
+  /* HIG · tap target ≥ 44（2026-09-10 t_9aeaf1dc） */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
   font-family: "Source Serif 4", serif;
   font-size: 14px;
   padding: 6px 12px;
   border: 1px solid var(--assess-rule);
   border-radius: 999px;
   color: var(--assess-ink-2);
+  cursor: pointer;
+}
+.assess-chip-check input {
+  accent-color: var(--assess-primary);
 }
 
 .assess-btn-primary,
@@ -1063,6 +1097,7 @@ body {
 }
 
 .home-task-checkbox {
+  /* 视觉 20 · 热区 44 —— HIG · D1 A 方案（S2-1 · 2026-09-10 t_9aeaf1dc） */
   flex: 0 0 auto;
   width: 20px;
   height: 20px;
@@ -1071,6 +1106,12 @@ body {
   background: var(--color-paper);
   cursor: pointer;
   padding: 0;
+  position: relative;
+}
+.home-task-checkbox::before {
+  content: '';
+  position: absolute;
+  inset: -12px; /* 20 + 12*2 = 44 */
 }
 
 .home-task-checkbox.checked {
@@ -1235,6 +1276,7 @@ body {
 }
 
 .plan-task-checkbox {
+  /* 视觉 20 · 热区 44 —— HIG · D1 A 方案（S2-1 · 2026-09-10 t_9aeaf1dc） */
   flex: 0 0 auto;
   width: 20px;
   height: 20px;
@@ -1244,6 +1286,12 @@ body {
   background: var(--color-paper);
   cursor: pointer;
   padding: 0;
+  position: relative;
+}
+.plan-task-checkbox::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
 }
 
 .plan-task-checkbox.checked {
@@ -1361,11 +1409,13 @@ body {
 }
 
 .profile-settings-item {
+  /* HIG · tap target ≥ 44（2026-09-10 t_9aeaf1dc） */
   text-align: left;
   background: var(--color-paper-alt);
   border: none;
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
+  min-height: 44px;
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--color-ink);
@@ -1594,20 +1644,35 @@ body {
   align-items: center;
 }
 .icon-btn {
-  width: 34px;
-  height: 34px;
+  /* 视觉 34 · 热区 44 —— HIG tap target（S2-2 · D2 修 · 2026-09-10 t_9aeaf1dc） */
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--color-rule);
-  background: var(--color-paper);
+  border: none;
+  background: transparent;
   color: var(--color-ink-2);
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
+}
+.icon-btn::before {
+  /* 视觉边框（34×34 胶囊） */
+  content: '';
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
+  z-index: -1;
 }
 .icon-btn.active {
   color: var(--color-primary);
+}
+.icon-btn.active::before {
   border-color: var(--color-primary-soft);
   background: var(--color-primary-soft);
 }
@@ -1734,7 +1799,8 @@ body {
   position: sticky;
   bottom: 0;
   background: var(--color-paper);
-  padding-top: 8px;
+  border-top: 1px solid var(--color-rule);
+  padding: 8px 0 calc(4px + var(--safe-bottom));
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1748,15 +1814,15 @@ body {
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-full);
   padding: 10px 16px;
-  height: 40px;
+  height: 44px; /* HIG · S2-2 tap target */
   outline: none;
 }
 .conv-composer input[type="text"]::placeholder {
   color: var(--color-ink-3);
 }
 .btn-send {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
   background: var(--color-ink);
   color: var(--color-paper);
@@ -1769,8 +1835,8 @@ body {
   opacity: 0.4;
 }
 .btn-mic {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
   background: var(--color-primary);
   color: #fff;

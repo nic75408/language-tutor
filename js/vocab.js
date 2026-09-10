@@ -259,7 +259,7 @@
 
     container.innerHTML =
       '<div class="page" data-page="vocab">' +
-        '<h1 class="page-title">📖 词库</h1>' +
+        '<h1 class="page-title">词库</h1>' +
         '<div class="vocab-summary">' +
           '<span>共 ' + allWords.length + ' 词</span>' +
           '<span>·</span>' +

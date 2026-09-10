@@ -483,12 +483,31 @@ body {
   margin-bottom: 12px;
 }
 
+/* Sticky 顶栏容器（DESIGN.md sticky-tabs · t_30d5ddc8） */
+.vocab-sticky-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0 calc(var(--pad-page) * -1) 12px;   /* 出血到屏边 */
+  padding: 8px var(--pad-page) 10px;
+  background: rgba(247, 243, 236, 0.88);        /* paper α0.88 */
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+/* Fallback：旧 iOS Safari 不支持 backdrop-filter 时改用高不透明度纸底 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vocab-sticky-tabs {
+    background: rgba(247, 243, 236, 0.98);
+  }
+}
+
 .vocab-scene-tabs {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
-  margin-bottom: 10px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -577,32 +596,22 @@ body {
   line-height: 1.4;
 }
 
-.vocab-status-badge {
+/* 状态标签（纯语义 · 不可点 · DESIGN.md badge-* · t_30d5ddc8） */
+.vocab-status-tag {
   flex: 0 0 auto;
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;                   /* rounded.xs */
   white-space: nowrap;
+  /* 显式不是按钮：无 cursor pointer、无 border、无 button element */
 }
-
-/* Status badges — DESIGN.md badge-* tokens（S1-1 修 · 2026-09-10 t_9aeaf1dc） */
-.vocab-status-badge.status-new {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-}
-
-.vocab-status-badge.status-learning {
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
-}
-
-.vocab-status-badge.status-mastered {
-  background: var(--color-success-soft);
-  color: var(--color-success);
-}
+.vocab-status-tag.status-new      { background: var(--color-primary-soft); color: var(--color-primary); }
+.vocab-status-tag.status-learning { background: var(--color-warning-soft); color: var(--color-warning); }
+.vocab-status-tag.status-mastered { background: var(--color-success-soft); color: var(--color-success); }
 
 .vocab-phonetic {
   font-size: 13px;
@@ -660,6 +669,60 @@ body {
   line-height: 1.6;
   color: var(--color-text);
 }
+
+/* Segmented Control · 词卡状态切换（DESIGN.md segmented-control · t_30d5ddc8） */
+.vocab-status-segmented {
+  margin-top: 14px;
+}
+.vocab-status-segmented .vocab-detail-label {
+  display: block;
+  margin-bottom: 6px;
+}
+.vocab-segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-sm);         /* 4px */
+  padding: 3px;
+  min-height: 44px;                        /* HIG · 容器整体 44 */
+}
+.vocab-segmented button {
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-ink-2);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 8px 4px;
+  min-height: 38px;                        /* 内段 38，容器满足 44 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.vocab-segmented .seg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+/* 语义色（未选中时点用语义色，文字保持 ink-2 · 提示"这是什么态"） */
+.vocab-segmented button.seg-new .seg-dot      { color: var(--color-primary); }
+.vocab-segmented button.seg-learning .seg-dot { color: var(--color-warning); }
+.vocab-segmented button.seg-mastered .seg-dot { color: var(--color-success); }
+
+/* 选中态：surface（白纸感抬起）+ 微阴影 + 语义色文字 + 加粗 */
+.vocab-segmented button[aria-pressed="true"] {
+  background: var(--color-surface);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(28, 27, 24, 0.08), 0 0 0 0.5px rgba(28, 27, 24, 0.08);
+}
+.vocab-segmented button[aria-pressed="true"].seg-new      { color: var(--color-primary); }
+.vocab-segmented button[aria-pressed="true"].seg-learning { color: var(--color-warning); }
+.vocab-segmented button[aria-pressed="true"].seg-mastered { color: var(--color-success); }
 
 .vocab-review-actions {
   margin-top: 14px;

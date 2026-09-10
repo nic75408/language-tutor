@@ -109,11 +109,6 @@
   // ---------------------------------------------------------------------
   // 状态操作
   // ---------------------------------------------------------------------
-  function cycleStatus(current) {
-    var idx = STATUS_ORDER.indexOf(current);
-    return STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
-  }
-
   function setStatus(word, newStatus) {
     var progress = loadProgress();
     var entry = getEntryState(progress, word);
@@ -194,9 +189,21 @@
 
     var detailHtml = '';
     if (isExpanded) {
+      var statusSegHtml = '<div class="vocab-status-segmented">' +
+        '<span class="vocab-detail-label">状态</span>' +
+        '<div class="vocab-segmented" role="radiogroup" aria-label="学习状态">' +
+          STATUS_ORDER.map(function (s) {
+            var pressed = s === entry.status ? 'true' : 'false';
+            return '<button class="seg-' + s + '" role="radio" aria-pressed="' + pressed + '" data-set-status="' + s + '" data-id="' + word.id + '">' +
+              '<span class="seg-dot"></span>' + STATUS_LABEL[s] +
+            '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>';
       detailHtml = '<div class="vocab-card-detail">' +
         '<div class="vocab-detail-row"><span class="vocab-detail-label">例句</span>' +
         '<p class="vocab-example">' + escapeHtml(word.example || '') + '</p></div>' +
+        statusSegHtml +
         '<div class="vocab-review-actions">' +
         '<span class="vocab-detail-label">复习评价</span>' +
         '<div class="vocab-review-btns">' +
@@ -212,9 +219,9 @@
       '<div class="vocab-card-main" data-toggle="' + word.id + '">' +
         '<div class="vocab-card-top">' +
           '<span class="vocab-en">' + escapeHtml(word.en) + '</span>' +
-          '<button class="vocab-status-badge status-' + entry.status + '" data-status-toggle="' + word.id + '">' +
+          '<span class="vocab-status-tag status-' + entry.status + '" aria-label="状态：' + STATUS_LABEL[entry.status] + '">' +
             STATUS_LABEL[entry.status] +
-          '</button>' +
+          '</span>' +
         '</div>' +
         '<div class="vocab-phonetic">' + escapeHtml(word.phonetic || '') + '</div>' +
         '<div class="vocab-zh">' + escapeHtml(word.zh) + '</div>' +
@@ -266,7 +273,9 @@
           '<span>·</span>' +
           '<span>今日待复习 ' + dueCount + '</span>' +
         '</div>' +
-        '<div class="vocab-scene-tabs" id="vocab-scene-tabs">' + renderSceneTabs() + '</div>' +
+        '<div class="vocab-sticky-tabs" id="vocab-sticky-tabs">' +
+          '<div class="vocab-scene-tabs" id="vocab-scene-tabs">' + renderSceneTabs() + '</div>' +
+        '</div>' +
         '<label class="vocab-due-toggle">' +
           '<input type="checkbox" id="vocab-due-checkbox"' + (state.showDueOnly ? ' checked' : '') + '>' +
           '<span>只看今日复习队列</span>' +
@@ -311,16 +320,13 @@
         return;
       }
 
-      var statusBtn = e.target.closest('[data-status-toggle]');
-      if (statusBtn) {
+      var segBtn = e.target.closest('[data-set-status]');
+      if (segBtn) {
         e.stopPropagation();
-        var sid = statusBtn.getAttribute('data-status-toggle');
-        var progress = loadProgress();
-        var w2 = (window.VOCAB_DATA || []).filter(function (w) { return w.id === sid; })[0];
-        if (w2) {
-          var entry = getEntryState(progress, w2);
-          setStatus(w2, cycleStatus(entry.status));
-        }
+        var sid = segBtn.getAttribute('data-id');
+        var newStatus = segBtn.getAttribute('data-set-status');
+        var w = (window.VOCAB_DATA || []).filter(function (x) { return x.id === sid; })[0];
+        if (w) setStatus(w, newStatus);
         render(container);
         return;
       }

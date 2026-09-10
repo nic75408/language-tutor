@@ -1,0 +1,12 @@
+{
+  "name": "language-tutor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "语言学习助手 —— 纯静态 PWA",
+  "scripts": {
+    "test": "node scripts/run-playwright-tests.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}

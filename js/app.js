@@ -1,8 +1,9 @@
 /* app.js —— 路由 + Tab 切换框架
  * hash 路由：#home / #vocab / #conversation / #grammar / #profile / #assessment
- * 支持二级详情路由：#grammar/<id>（如 #grammar/tense-present），用于知识点详情页深链。
+ * 支持二级/多级子路由（如 #grammar/tense-present、#conversation/scene/cafe-order），
+ * Tab 高亮按第一段匹配，用于知识点详情页深链及对话子页面。
  * 各页面模块（home.js/vocab.js/...）通过 window.App.pages.<route>.render(container, param) 渲染内容，
- * param 为二级路径的剩余部分（没有则为 null）。
+ * param 为二级路径起的剩余部分（没有则为 null），可能包含多段（如 'chat/scene/xxx'）。
  * #assessment 是首次评估的全屏流程，不在底部 Tab Bar 中出现。
  */
 (function () {
@@ -43,6 +44,7 @@
     }
     updateTabState(parsed.route);
     updateChromeForRoute(parsed.route);
+    outlet.scrollTop = 0;
   }
 
   function updateTabState(route) {

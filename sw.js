@@ -1,7 +1,7 @@
 /* sw.js —— Service Worker 基础离线缓存
  * 策略：安装时预缓存 app shell；离线时 fallback 到 offline.html
  */
-const CACHE_APP = 'lang-tutor-app-v3';
+const CACHE_APP = 'lang-tutor-app-v4';
 
 const APP_SHELL = [
   './',
@@ -15,10 +15,14 @@ const APP_SHELL = [
   './js/assessment.js',
   './js/home.js',
   './js/vocab.js',
+  './js/conversation-store.js',
+  './js/speech.js',
+  './js/ai-tutor.js',
   './js/conversation.js',
   './js/grammar-data.js',
   './js/grammar.js',
   './js/profile.js',
+  './data/scenarios.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];

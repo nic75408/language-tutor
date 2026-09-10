@@ -719,6 +719,7 @@ body {
   --assess-success-soft: #E4EADF;
   --assess-rule: rgba(28,27,24,0.09);
   color: var(--assess-ink);
+  padding-bottom: 24px;
 }
 
 .assess-progress {
@@ -747,7 +748,7 @@ body {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .assess-tutor-avatar {
@@ -773,53 +774,143 @@ body {
   padding-top: 4px;
 }
 
-.assess-passage,
-.assess-scenario {
+.assess-tutor-text b {
+  color: var(--assess-primary);
+  font-weight: 700;
+}
+
+.assess-passage {
   background: var(--assess-paper-alt);
   border-radius: 10px;
   padding: 16px;
   font-family: "Source Serif 4", serif;
   font-size: 15px;
   line-height: 1.55;
+  margin-bottom: 24px;
+}
+
+/* ---------- 题块 ---------- */
+.assess-q-block {
+  margin-bottom: 28px;
+}
+.assess-q-block:last-of-type {
   margin-bottom: 20px;
 }
 
-.assess-form {
+.assess-q-label {
+  font-family: "Source Serif 4", serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--assess-ink);
+  line-height: 1.35;
+  margin-bottom: 10px;
+}
+
+.assess-q-hint {
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  color: var(--assess-ink-3);
+  font-weight: 500;
+  margin-left: 6px;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 目录卡（catalog row），单选与多选共用 ---------- */
+.assess-catalog {
   display: flex;
   flex-direction: column;
+}
+
+.assess-cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  border-top: 1px solid var(--assess-rule);
+  cursor: pointer;
+  text-align: left;
+  color: var(--assess-ink);
+  font: inherit;
+  transition: background 0.12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.assess-cat-row:last-child {
+  border-bottom: 1px solid var(--assess-rule);
+}
+.assess-cat-row:active {
+  background: rgba(28,27,24,0.03);
 }
 
-.assess-label {
-  font-size: 13px;
-  color: var(--assess-ink-2);
-  margin-top: 4px;
+.assess-cat-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-.assess-input,
-.assess-textarea {
-  font-family: inherit;
+.assess-cat-text {
+  font-family: "Source Serif 4", serif;
   font-size: 15px;
-  padding: 12px 14px;
-  border: 1px solid var(--assess-rule);
-  border-radius: 10px;
-  background: #fff;
+  line-height: 1.35;
   color: var(--assess-ink);
 }
 
-.assess-textarea {
-  font-family: "Source Serif 4", serif;
-  resize: vertical;
+.assess-cat-sub {
+  font-family: Inter, "PingFang SC", sans-serif;
+  font-size: 12px;
+  color: var(--assess-ink-3);
+  line-height: 1.35;
 }
 
-.assess-question {
-  border-top: 1px solid var(--assess-rule);
-  padding-top: 12px;
+/* 单选圆点 */
+.assess-cat-dot {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--assess-ink-3);
+  border-radius: 999px;
+  position: relative;
+}
+.assess-cat-row.selected .assess-cat-dot {
+  border-color: var(--assess-primary);
+}
+.assess-cat-row.selected .assess-cat-dot::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 999px;
+  background: var(--assess-primary);
 }
 
-.assess-q-text {
-  font-size: 14px;
-  margin: 0 0 8px;
+/* 多选方勾（沿用 DESIGN.md checkbox-checked：书签红填充 + 米白对勾） */
+.assess-cat-check {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--assess-ink-3);
+  border-radius: 2px;
+  position: relative;
+  background: var(--assess-paper);
+}
+.assess-cat-row.selected .assess-cat-check {
+  background: var(--assess-primary);
+  border-color: var(--assess-primary);
+}
+.assess-cat-row.selected .assess-cat-check::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 6px;
+  height: 10px;
+  border: solid var(--assess-paper);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .assess-radio {
@@ -837,10 +928,52 @@ body {
   accent-color: var(--assess-primary);
 }
 
+/* 选中态整行：文字加粗 + 换书签红 + 淡米色 alt 底 */
+.assess-cat-row.selected {
+  background: var(--assess-paper-alt);
+}
+.assess-cat-row.selected .assess-cat-text {
+  color: var(--assess-primary);
+  font-weight: 700;
+}
+
+/* ---------- 横排 chip 网格（时长 4 单元） ---------- */
+.assess-chip-row {
+  display: flex;
+  gap: 8px;
+}
+
+.assess-chip-cell {
+  flex: 1;
+  min-height: 60px;
+  padding: 10px 6px;
+  border: 1px solid var(--assess-rule);
+  border-radius: 10px;
+  background: var(--assess-paper);
+  color: var(--assess-ink-2);
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.assess-chip-cell:active {
+  transform: scale(0.98);
+}
+.assess-chip-cell.selected {
+  background: var(--assess-ink);
+  border-color: var(--assess-ink);
+  color: var(--assess-paper);
+}
+
+/* ---------- 词汇 chip（保留原视觉，加交互态） ---------- */
 .assess-vocab-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 24px;
 }
 
 .assess-chip-check {
@@ -852,13 +985,92 @@ body {
   font-family: "Source Serif 4", serif;
   font-size: 14px;
   padding: 6px 12px;
+  min-height: 32px;
   border: 1px solid var(--assess-rule);
   border-radius: 999px;
+  background: var(--assess-paper);
   color: var(--assess-ink-2);
   cursor: pointer;
 }
 .assess-chip-check input {
   accent-color: var(--assess-primary);
+  transition: all 0.12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.assess-chip-check:active {
+  transform: scale(0.96);
+}
+.assess-chip-check.selected {
+  background: var(--assess-ink);
+  border-color: var(--assess-ink);
+  color: var(--assess-paper);
+}
+
+/* ---------- 段落卡（R4 输出能力三选一） ---------- */
+.assess-paragraphs {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.assess-para-card {
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-top: 1px solid var(--assess-rule);
+  background: transparent;
+  color: var(--assess-ink);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.assess-para-card:last-child {
+  border-bottom: 1px solid var(--assess-rule);
+}
+.assess-para-card:active {
+  background: rgba(28,27,24,0.03);
+}
+
+.assess-para-en {
+  display: block;
+  font-family: "Source Serif 4", serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--assess-ink);
+  margin-bottom: 6px;
+}
+
+.assess-para-tier {
+  display: block;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  color: var(--assess-ink-3);
+  letter-spacing: 0.08em;
+}
+
+.assess-para-card.selected {
+  background: var(--assess-paper-alt);
+}
+.assess-para-card.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--assess-primary);
+}
+.assess-para-card.selected .assess-para-tier {
+  color: var(--assess-primary);
+  font-weight: 700;
+}
+
+/* ---------- 操作按钮 ---------- */
+.assess-actions {
+  margin-top: 8px;
 }
 
 .assess-btn-primary,
@@ -870,12 +1082,23 @@ body {
   border-radius: 4px;
   border: none;
   cursor: pointer;
+  width: 100%;
+  min-height: 48px;
   margin-top: 8px;
+  transition: opacity 0.12s ease-out;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .assess-btn-primary {
   background: var(--assess-ink);
   color: var(--assess-paper);
+}
+.assess-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.assess-btn-primary:active:not(:disabled) {
+  opacity: 0.85;
 }
 
 .assess-btn-secondary {

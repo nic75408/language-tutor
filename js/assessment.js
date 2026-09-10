@@ -1,43 +1,47 @@
-/* assessment.js —— 水平评估模块
+/* assessment.js —— 水平评估模块（v2 · 全选择交互）
  * 首次使用时，导师通过 5 轮交互对话评估用户英语水平，输出 CEFR 等级 + 强弱项 + 学习建议。
- * 存储：localStorage['lt_assessment_v1'] = {
- *   status: 'completed',
- *   level: 'A1'..'C2',
- *   strengths: string[],
- *   weaknesses: string[],
- *   recommendation: string,
- *   completedAt: ISO string,
- *   answers: {...}   // 原始作答，供以后回看/重测参考
- * }
+ * v2 变更：所有输入环节改为选择（单选/多选卡片 / 段落卡），去除任何文字输入框。
+ *   R1 · 自我申报（3 题）：学习经历（单选目录卡）· 目标场景（多选目录卡）· 每天时长（横排 4-chip）
+ *   R2 · 阅读理解（3 题）：目录卡单选（视觉一致）
+ *   R3 · 词汇多选：chip 网格
+ *   R4 · 输出能力：三段英文自我介绍段落卡 3 选 1（替代原写作 textarea）
+ *   R5 · AI 综合评定
+ * 存储：localStorage['lt_assessment_v1']（key 保持不变，向前兼容读取；本次 answers 结构升级）
  */
 (function () {
   var STORAGE_KEY = 'lt_assessment_v1';
 
-  // ---- 静态内容（按 PRODUCT.md "不做：标准化测试题库用 AI 动态生成" —— 固定题面即可） ----
+  // ---- 静态内容 ----
+  var LEARNING_HISTORY = [
+    { value: 'never', label: '从未学过', sub: '零基础起步' },
+    { value: 'school', label: '学校里学过', sub: '中/高中英语课' },
+    { value: 'self', label: '自学过一段', sub: 'App、网课、看剧' },
+    { value: 'work', label: '工作中使用过', sub: '邮件、会议、出差' }
+  ];
+
+  var GOAL_SCENARIOS = [
+    { value: 'travel', label: '旅行', sub: '点餐、问路、订酒店' },
+    { value: 'daily', label: '日常对话', sub: '寒暄、聊兴趣爱好' },
+    { value: 'work', label: '工作', sub: '写邮件、开会发言' },
+    { value: 'exam', label: '考试', sub: '雅思、托福、四六级' }
+  ];
+
+  var DAILY_MINUTES = [
+    { value: 5, label: '5 min' },
+    { value: 15, label: '15 min' },
+    { value: 30, label: '30 min' },
+    { value: 60, label: '1 h+' }
+  ];
+
   var READING_PASSAGE =
     'Maria arrived at the airport two hours before her flight. She checked in at the counter, ' +
     'then went through security. At the gate, she realized she had forgotten her phone charger, ' +
     'so she quickly bought one at a nearby shop before boarding.';
 
   var READING_QUESTIONS = [
-    {
-      id: 'r1',
-      q: '玛丽亚是什么时候到达机场的？',
-      options: ['起飞前两小时', '起飞前十分钟', '起飞后'],
-      answer: 0
-    },
-    {
-      id: 'r2',
-      q: '她在登机口发现自己忘了带什么？',
-      options: ['护照', '手机充电器', '机票'],
-      answer: 1
-    },
-    {
-      id: 'r3',
-      q: '她后来怎么解决这个问题？',
-      options: ['借了别人的', '在附近商店买了一个', '没有解决就登机了'],
-      answer: 1
-    }
+    { id: 'r1', q: '玛丽亚是什么时候到达机场的？', options: ['起飞前两小时', '起飞前十分钟', '起飞后'], answer: 0 },
+    { id: 'r2', q: '她在登机口发现自己忘了带什么？', options: ['护照', '手机充电器', '机票'], answer: 1 },
+    { id: 'r3', q: '她后来怎么解决这个问题？', options: ['借了别人的', '在附近商店买了一个', '没有解决就登机了'], answer: 1 }
   ];
 
   // 从高频到低频排列，用于估测词汇量层级
@@ -54,7 +58,25 @@
     { word: 'idiosyncratic', tier: 5 }
   ];
 
-  var SCENARIO_PROMPT = 'Please introduce yourself to a new colleague: your name, your job, and one hobby you enjoy.';
+  // R4 三段"自我介绍"英文文本，梯度锚点（Basic → Intermediate → Advanced）
+  // 让用户选"最像你现在能说出来的水平"，替代打字写作
+  var OUTPUT_SAMPLES = [
+    {
+      value: 'basic',
+      tierLabel: 'Basic',
+      text: "Hi, I'm Anna. I work in Beijing. I like to read books."
+    },
+    {
+      value: 'intermediate',
+      tierLabel: 'Intermediate',
+      text: "Hi, I'm Anna. I work as a product designer in Beijing. In my free time I like reading and going for walks with my dog."
+    },
+    {
+      value: 'advanced',
+      tierLabel: 'Advanced',
+      text: "Hi, I'm Anna — nice to meet you. I've been working as a product designer for about five years, mostly on consumer apps. Outside of work I'm into long-form reading and I've recently picked up trail running."
+    }
+  ];
 
   var TOTAL_ROUNDS = 5;
 
@@ -65,10 +87,14 @@
     return {
       round: 1,
       answers: {
-        selfReport: { yearsLearning: '', toolsUsed: '', goal: '' },
+        selfReport: {
+          history: null,       // 'never' | 'school' | 'self' | 'work'
+          goals: [],           // 场景多选
+          dailyMinutes: null   // 5 | 15 | 30 | 60
+        },
         reading: {},
         vocabKnown: [],
-        writing: ''
+        outputLevel: null      // 'basic' | 'intermediate' | 'advanced'
       }
     };
   }
@@ -90,7 +116,7 @@
     window.localStorage.removeItem(STORAGE_KEY);
   }
 
-  // ---- 规则评分（AI 不可用时的本地回退，确保离线可用） ----
+  // ---- 规则评分（AI 不可用时的本地回退） ----
   function scoreLocally(answers) {
     var readingCorrect = 0;
     READING_QUESTIONS.forEach(function (item) {
@@ -105,17 +131,20 @@
       if (found && found.tier > highestTierKnown) highestTierKnown = found.tier;
     });
 
-    var writing = (answers.writing || '').trim();
-    var writingWordCount = writing ? writing.split(/\s+/).length : 0;
-    var writingHasComplexClause = /\bbecause\b|\bwhich\b|\balthough\b|\bwhile\b|\bwhen\b/i.test(writing);
+    // 输出等级映射：basic→0.2 / intermediate→0.55 / advanced→0.9
+    var outputMap = { basic: 0.2, intermediate: 0.55, advanced: 0.9 };
+    var outputScore = outputMap[answers.outputLevel] != null ? outputMap[answers.outputLevel] : 0.2;
+
+    // 场景多选广度：0-1
+    var goalsBreadth = Math.min((answers.selfReport.goals || []).length / 4, 1);
 
     // 综合打分：0-100
     var score = 0;
     score += readingRatio * 30;
     score += Math.min(vocabKnownCount / VOCAB_WORDS.length, 1) * 25;
     score += Math.min(highestTierKnown / 5, 1) * 15;
-    score += Math.min(writingWordCount / 40, 1) * 20;
-    score += writingHasComplexClause ? 10 : 0;
+    score += outputScore * 25;  // R4 段落自评权重（原写作是 30，稍降 5 分给覆盖广度）
+    score += goalsBreadth * 5;  // 场景覆盖广度小权重
 
     var level;
     if (score < 20) level = 'A1';
@@ -134,18 +163,26 @@
     if (vocabKnownCount >= 7) strengths.push('词汇量：认识的高频词/进阶词都比较多');
     else if (vocabKnownCount <= 3) weaknesses.push('词汇量：认识的词偏少，建议先夯实高频词');
 
-    if (writingWordCount >= 25) strengths.push('写作输出：能自由表达，句子长度足够');
-    else weaknesses.push('写作/口语输出：表达偏简短，需要多练习自由造句');
-
-    if (writingHasComplexClause) strengths.push('语法结构：会使用从句，句式有一定复杂度');
-    else weaknesses.push('语法结构：基本只用简单句，从句/连接词用得少');
+    if (answers.outputLevel === 'advanced') {
+      strengths.push('口语表达：能自如说出结构丰富的长句');
+    } else if (answers.outputLevel === 'intermediate') {
+      strengths.push('口语表达：能自我介绍并展开说一些细节');
+    } else {
+      weaknesses.push('口语表达：只能说最基础的短句，需要多练自由造句');
+    }
 
     if (strengths.length === 0) strengths.push('愿意主动完成评估，学习态度积极');
     if (weaknesses.length === 0) weaknesses.push('整体表现均衡，暂无明显短板');
 
+    // 从场景多选生成建议指向
+    var scenarioLabelMap = { travel: '旅行', daily: '日常对话', work: '工作', exam: '考试' };
+    var firstGoal = (answers.selfReport.goals && answers.selfReport.goals[0]) || 'daily';
+    var goalName = scenarioLabelMap[firstGoal] || '日常对话';
+
     var recommendation =
       '建议从 ' + level + ' 对应难度的场景对话练起，优先补齐：' + weaknesses[0].split('：')[0] +
-      '。可在"对话"模块选择贴近你目标（旅行/日常/工作）的场景，每天 15-20 分钟坚持练习。';
+      '。可在"对话"模块选择贴近你目标（' + goalName + '）的场景，每天 ' +
+      (answers.selfReport.dailyMinutes || 15) + ' 分钟坚持练习。';
 
     return {
       level: level,
@@ -164,6 +201,8 @@
       '{"level":"A1|A2|B1|B2|C1|C2","strengths":["..."],"weaknesses":["..."],"recommendation":"..."}。' +
       'strengths 和 weaknesses 各 2-3 条，用简体中文，具体到听说读写哪个维度；recommendation 是一句可执行的学习建议。';
 
+    var selectedSample = OUTPUT_SAMPLES.filter(function (s) { return s.value === answers.outputLevel; })[0];
+
     var userPayload = JSON.stringify({
       selfReport: answers.selfReport,
       readingQuestions: READING_QUESTIONS.map(function (q) { return q.q; }),
@@ -173,7 +212,8 @@
       readingTotal: READING_QUESTIONS.length,
       vocabKnown: answers.vocabKnown,
       vocabTotal: VOCAB_WORDS.map(function (v) { return v.word; }),
-      writingSample: answers.writing
+      outputSelfAssessedLevel: answers.outputLevel,   // 用户选的输出水平锚点
+      outputSampleUserSelected: selectedSample ? selectedSample.text : null
     });
 
     return window.App.ai.chatCompletion([
@@ -198,7 +238,7 @@
     }
   }
 
-  // ---- 渲染 ----
+  // ---- 渲染工具 ----
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -211,15 +251,125 @@
       '</div><div class="assess-progress-label">第 ' + round + ' / ' + TOTAL_ROUNDS + ' 轮</div>';
   }
 
+  function tutorBubble(text) {
+    return '<div class="assess-tutor-msg"><span class="assess-tutor-avatar" aria-hidden="true">T</span>' +
+      '<div class="assess-tutor-text">' + text + '</div></div>';
+  }
+
+  // 目录卡（单选）—— 主视觉组件
+  // items: [{value, label, sub?}]，selectedValue: 当前选中 value
+  function catalogSingleHtml(name, items, selectedValue) {
+    return '<div class="assess-catalog" role="radiogroup" aria-label="' + esc(name) + '">' +
+      items.map(function (item) {
+        var sel = item.value === selectedValue;
+        return '<button type="button" class="assess-cat-row' + (sel ? ' selected' : '') +
+          '" role="radio" aria-checked="' + (sel ? 'true' : 'false') +
+          '" data-name="' + esc(name) + '" data-value="' + esc(item.value) + '">' +
+          '<span class="assess-cat-text-wrap">' +
+            '<span class="assess-cat-text">' + esc(item.label) + '</span>' +
+            (item.sub ? '<span class="assess-cat-sub">' + esc(item.sub) + '</span>' : '') +
+          '</span>' +
+          '<span class="assess-cat-dot" aria-hidden="true"></span>' +
+          '</button>';
+      }).join('') +
+      '</div>';
+  }
+
+  // 目录卡（多选）
+  function catalogMultiHtml(name, items, selectedValues) {
+    var sel = selectedValues || [];
+    return '<div class="assess-catalog" role="group" aria-label="' + esc(name) + '">' +
+      items.map(function (item) {
+        var isSel = sel.indexOf(item.value) !== -1;
+        return '<button type="button" class="assess-cat-row' + (isSel ? ' selected' : '') +
+          '" role="checkbox" aria-checked="' + (isSel ? 'true' : 'false') +
+          '" data-name="' + esc(name) + '" data-value="' + esc(item.value) + '" data-multi="1">' +
+          '<span class="assess-cat-text-wrap">' +
+            '<span class="assess-cat-text">' + esc(item.label) + '</span>' +
+            (item.sub ? '<span class="assess-cat-sub">' + esc(item.sub) + '</span>' : '') +
+          '</span>' +
+          '<span class="assess-cat-check" aria-hidden="true"></span>' +
+          '</button>';
+      }).join('') +
+      '</div>';
+  }
+
+  // 横排 chip 网格（等宽 4 项，用于时长）
+  function chipRowHtml(name, items, selectedValue) {
+    return '<div class="assess-chip-row" role="radiogroup" aria-label="' + esc(name) + '">' +
+      items.map(function (item) {
+        var sel = item.value === selectedValue;
+        return '<button type="button" class="assess-chip-cell' + (sel ? ' selected' : '') +
+          '" role="radio" aria-checked="' + (sel ? 'true' : 'false') +
+          '" data-name="' + esc(name) + '" data-value="' + esc(item.value) + '">' +
+          esc(item.label) +
+          '</button>';
+      }).join('') +
+      '</div>';
+  }
+
+  // 段落卡（用于 R4，3 选 1）
+  function paragraphCardHtml(name, items, selectedValue) {
+    return '<div class="assess-paragraphs" role="radiogroup" aria-label="' + esc(name) + '">' +
+      items.map(function (item) {
+        var sel = item.value === selectedValue;
+        return '<button type="button" class="assess-para-card' + (sel ? ' selected' : '') +
+          '" role="radio" aria-checked="' + (sel ? 'true' : 'false') +
+          '" data-name="' + esc(name) + '" data-value="' + esc(item.value) + '">' +
+          '<span class="assess-para-en">' + esc(item.text) + '</span>' +
+          '<span class="assess-para-tier">Level · ' + esc(item.tierLabel) + '</span>' +
+          '</button>';
+      }).join('') +
+      '</div>';
+  }
+
+  // 通用：按钮点选（single / multi）绑定
+  function bindChoices(scope, onChange) {
+    scope.addEventListener('click', function (e) {
+      var btn = e.target.closest('.assess-cat-row, .assess-chip-cell, .assess-para-card');
+      if (!btn || !scope.contains(btn)) return;
+      var name = btn.getAttribute('data-name');
+      var value = btn.getAttribute('data-value');
+      var isMulti = btn.getAttribute('data-multi') === '1';
+      var group = btn.parentElement;
+
+      if (isMulti) {
+        var was = btn.classList.toggle('selected');
+        btn.setAttribute('aria-checked', was ? 'true' : 'false');
+      } else {
+        Array.prototype.forEach.call(
+          group.querySelectorAll('[data-name="' + name + '"]'),
+          function (el) {
+            el.classList.remove('selected');
+            el.setAttribute('aria-checked', 'false');
+          }
+        );
+        btn.classList.add('selected');
+        btn.setAttribute('aria-checked', 'true');
+      }
+      if (onChange) onChange(name, value, isMulti);
+    });
+  }
+
+  // 从 group 内提取当前选择
+  function readGroupSingle(scope, name) {
+    var el = scope.querySelector('[data-name="' + name + '"].selected');
+    return el ? el.getAttribute('data-value') : null;
+  }
+  function readGroupMulti(scope, name) {
+    return Array.prototype.slice.call(
+      scope.querySelectorAll('[data-name="' + name + '"].selected')
+    ).map(function (el) { return el.getAttribute('data-value'); });
+  }
+
+  // ---- 渲染 ----
   function render(container) {
     if (!state) state = freshState();
-
     container.innerHTML =
       '<div class="page assess-page" data-page="assessment">' +
       progressHtml(state.round) +
       '<div id="assess-body" class="assess-body"></div>' +
       '</div>';
-
     var body = container.querySelector('#assess-body');
     renderRound(body);
   }
@@ -232,11 +382,6 @@
     if (state.round === 5) return renderRound5(body);
   }
 
-  function tutorBubble(text) {
-    return '<div class="assess-tutor-msg"><span class="assess-tutor-avatar" aria-hidden="true">T</span>' +
-      '<div class="assess-tutor-text">' + text + '</div></div>';
-  }
-
   function goNext(body) {
     state.round += 1;
     var container = body.closest('.assess-page');
@@ -245,109 +390,148 @@
     if (progressWrap) progressWrap.querySelector('.assess-progress-bar').style.width =
       Math.round((state.round - 1) / TOTAL_ROUNDS * 100) + '%';
     if (label) label.textContent = '第 ' + Math.min(state.round, TOTAL_ROUNDS) + ' / ' + TOTAL_ROUNDS + ' 轮';
+    body.scrollTop = 0;
     renderRound(body);
   }
 
+  // R1 · 自我申报（3 题选择）
   function renderRound1(body) {
+    var sr = state.answers.selfReport;
     body.innerHTML =
-      tutorBubble('你好！我是你的英语私教。开始之前，先聊几句了解你的情况——中文回答就好。') +
-      '<form id="r1-form" class="assess-form">' +
-      '<label class="assess-label">你学英语大概多久了？</label>' +
-      '<input class="assess-input" name="yearsLearning" placeholder="例如：断断续续 5 年" required>' +
-      '<label class="assess-label">你用过什么学习工具或方法？</label>' +
-      '<input class="assess-input" name="toolsUsed" placeholder="例如：多邻国、背单词 App">' +
-      '<label class="assess-label">你这次学习的目标是什么？</label>' +
-      '<input class="assess-input" name="goal" placeholder="例如：能自如地日常对话" required>' +
-      '<button type="submit" class="assess-btn-primary">下一步</button>' +
-      '</form>';
+      tutorBubble('你好！我是你的英语私教。先了解一下你的情况——都是选择题，不用打字。') +
+      '<div class="assess-q-block">' +
+        '<div class="assess-q-label">你学英语大概多久了？</div>' +
+        catalogSingleHtml('history', LEARNING_HISTORY, sr.history) +
+      '</div>' +
+      '<div class="assess-q-block">' +
+        '<div class="assess-q-label">这次学习主要想覆盖哪些场景？<span class="assess-q-hint">可多选</span></div>' +
+        catalogMultiHtml('goals', GOAL_SCENARIOS, sr.goals) +
+      '</div>' +
+      '<div class="assess-q-block">' +
+        '<div class="assess-q-label">每天大概能花多少时间学？</div>' +
+        chipRowHtml('dailyMinutes', DAILY_MINUTES, sr.dailyMinutes) +
+      '</div>' +
+      '<div class="assess-actions">' +
+        '<button type="button" id="r1-next" class="assess-btn-primary" disabled>下一步</button>' +
+      '</div>';
 
-    body.querySelector('#r1-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var fd = new FormData(e.target);
+    function refresh() {
+      var history = readGroupSingle(body, 'history');
+      var goals = readGroupMulti(body, 'goals');
+      var mins = readGroupSingle(body, 'dailyMinutes');
       state.answers.selfReport = {
-        yearsLearning: (fd.get('yearsLearning') || '').trim(),
-        toolsUsed: (fd.get('toolsUsed') || '').trim(),
-        goal: (fd.get('goal') || '').trim()
+        history: history,
+        goals: goals,
+        dailyMinutes: mins == null ? null : parseInt(mins, 10)
       };
+      body.querySelector('#r1-next').disabled = !(history && goals.length && mins);
+    }
+
+    bindChoices(body, refresh);
+    body.querySelector('#r1-next').addEventListener('click', function () {
+      if (this.disabled) return;
       goNext(body);
     });
   }
 
+  // R2 · 阅读理解（3 题目录卡）
   function renderRound2(body) {
-    var questionsHtml = READING_QUESTIONS.map(function (item, idx) {
-      var optionsHtml = item.options.map(function (opt, oi) {
-        return '<label class="assess-radio">' +
-          '<input type="radio" name="' + item.id + '" value="' + oi + '" required> ' + esc(opt) +
-          '</label>';
-      }).join('');
-      return '<div class="assess-question">' +
-        '<p class="assess-q-text">' + (idx + 1) + '. ' + esc(item.q) + '</p>' +
-        optionsHtml +
+    var current = state.answers.reading || {};
+    var qBlocks = READING_QUESTIONS.map(function (item, idx) {
+      var opts = item.options.map(function (opt, oi) {
+        return { value: String(oi), label: opt };
+      });
+      return '<div class="assess-q-block">' +
+        '<div class="assess-q-label">' + (idx + 1) + '. ' + esc(item.q) + '</div>' +
+        catalogSingleHtml(item.id, opts, current[item.id] != null ? String(current[item.id]) : null) +
         '</div>';
     }).join('');
 
     body.innerHTML =
-      tutorBubble('先读一段短文，再回答几个理解性问题（中文回答即可）。') +
+      tutorBubble('先读一段短文，再回答几个理解性问题。') +
       '<div class="assess-passage">' + esc(READING_PASSAGE) + '</div>' +
-      '<form id="r2-form" class="assess-form">' +
-      questionsHtml +
-      '<button type="submit" class="assess-btn-primary">下一步</button>' +
-      '</form>';
+      qBlocks +
+      '<div class="assess-actions">' +
+        '<button type="button" id="r2-next" class="assess-btn-primary" disabled>下一步</button>' +
+      '</div>';
 
-    body.querySelector('#r2-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var fd = new FormData(e.target);
+    function refresh() {
       var reading = {};
+      var complete = true;
       READING_QUESTIONS.forEach(function (item) {
-        var v = fd.get(item.id);
+        var v = readGroupSingle(body, item.id);
         reading[item.id] = v == null ? null : parseInt(v, 10);
+        if (v == null) complete = false;
       });
       state.answers.reading = reading;
+      body.querySelector('#r2-next').disabled = !complete;
+    }
+
+    bindChoices(body, refresh);
+    body.querySelector('#r2-next').addEventListener('click', function () {
+      if (this.disabled) return;
       goNext(body);
     });
   }
 
+  // R3 · 词汇多选（保留原 chip 网格视觉）
   function renderRound3(body) {
+    var known = state.answers.vocabKnown || [];
     var wordsHtml = VOCAB_WORDS.map(function (item) {
-      return '<label class="assess-chip-check">' +
-        '<input type="checkbox" name="vocab" value="' + esc(item.word) + '"> ' + esc(item.word) +
-        '</label>';
+      var isSel = known.indexOf(item.word) !== -1;
+      return '<button type="button" class="assess-chip-check' + (isSel ? ' selected' : '') +
+        '" role="checkbox" aria-checked="' + (isSel ? 'true' : 'false') +
+        '" data-name="vocab" data-value="' + esc(item.word) + '" data-multi="1">' +
+        esc(item.word) +
+        '</button>';
     }).join('');
 
     body.innerHTML =
       tutorBubble('下面这些单词，勾选出你认识的（知道大概意思就算认识）。') +
-      '<form id="r3-form" class="assess-form">' +
-      '<div class="assess-vocab-grid">' + wordsHtml + '</div>' +
-      '<button type="submit" class="assess-btn-primary">下一步</button>' +
-      '</form>';
+      '<div class="assess-vocab-grid" role="group" aria-label="vocab">' + wordsHtml + '</div>' +
+      '<div class="assess-actions">' +
+        '<button type="button" id="r3-next" class="assess-btn-primary">下一步</button>' +
+      '</div>';
 
-    body.querySelector('#r3-form').addEventListener('submit', function (e) {
-      e.preventDefault();
+    // chip-check 单独处理 toggle
+    body.querySelector('.assess-vocab-grid').addEventListener('click', function (e) {
+      var btn = e.target.closest('.assess-chip-check');
+      if (!btn) return;
+      var was = btn.classList.toggle('selected');
+      btn.setAttribute('aria-checked', was ? 'true' : 'false');
+    });
+
+    body.querySelector('#r3-next').addEventListener('click', function () {
       var checked = Array.prototype.slice.call(
-        body.querySelectorAll('input[name="vocab"]:checked')
-      ).map(function (el) { return el.value; });
+        body.querySelectorAll('.assess-chip-check.selected')
+      ).map(function (el) { return el.getAttribute('data-value'); });
       state.answers.vocabKnown = checked;
       goNext(body);
     });
   }
 
+  // R4 · 输出能力（三段选一段）
   function renderRound4(body) {
     body.innerHTML =
-      tutorBubble('最后一轮，请你自由发挥。用英语写一写（或者语音说也可以，先写下来）：') +
-      '<div class="assess-scenario">' + esc(SCENARIO_PROMPT) + '</div>' +
-      '<form id="r4-form" class="assess-form">' +
-      '<textarea class="assess-textarea" name="writing" rows="5" placeholder="Type in English..." required></textarea>' +
-      '<button type="submit" class="assess-btn-primary">生成我的评估结果</button>' +
-      '</form>';
+      tutorBubble('最后一题。下面三段是「跟新同事自我介绍」的三种版本——选一段<b>最像你现在能说出来的水平</b>就好。') +
+      paragraphCardHtml('outputLevel', OUTPUT_SAMPLES, state.answers.outputLevel) +
+      '<div class="assess-actions">' +
+        '<button type="button" id="r4-next" class="assess-btn-primary" disabled>生成我的评估结果</button>' +
+      '</div>';
 
-    body.querySelector('#r4-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var fd = new FormData(e.target);
-      state.answers.writing = (fd.get('writing') || '').trim();
+    function refresh() {
+      var v = readGroupSingle(body, 'outputLevel');
+      state.answers.outputLevel = v;
+      body.querySelector('#r4-next').disabled = !v;
+    }
+    bindChoices(body, refresh);
+    body.querySelector('#r4-next').addEventListener('click', function () {
+      if (this.disabled) return;
       goNext(body);
     });
   }
 
+  // R5 · AI 综合评定
   function renderRound5(body) {
     body.innerHTML =
       tutorBubble('好的，正在根据这几轮的表现帮你综合评定……') +

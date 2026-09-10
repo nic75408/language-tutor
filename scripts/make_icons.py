@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""生成 PWA 图标（语言学习助手，与 Art Daily 同风格系列）。
+"""生成 PWA 图标（语言学习助手，与 Art Daily 同风格系列 · 无框留白版）。
 
-设计模板沿用 Art Daily：
-- 米白大底（--bg #F5F1EA），非纯白，纸感；
-- 中央金褐直角细框（--gold #8C6D3F），像装裱画框；
-- 框内米白衬卡（--bg-card #FDFBF7），与框底形成极轻层次；
-- 衬卡正中金褐衬线字符，按墨心 bbox 光学居中。
+t_f1a37dcc 修订：
+- 赤拔反馈：icon 不要方形边框，参照最新的 Art Daily 方式，留白。
+- 新模板去掉金褐直角画框和内衬卡，只保留米白大底 + 中央 Songti 金褐单字，
+  周围纯留白。同色系（BG/FG）不变，保系列血脉。
 
-本脚本相对 Art Daily 的扩展：
-- 支持任意字符 + 字体路径组合（三案自决用）；
-- 支持"双语上下分栏"构图（C 案候选，未采用）；
-- 输出：icon-192, icon-512, icon-512-maskable, apple-touch-icon(180),
-        favicon-32, favicon.ico。
+三案自决（本次修订，无框方向）：
+  A 纯留白单字   ── 字占 52%，四周纯留白，极简。
+  B 字下细金线   ── 字占 46%，下方 1.5%px 金褐水平细线（长度=字宽 65%），题跋感。
+  C 字加金点     ── 字占 50%，右上 4%R 金褐圆点，呼应 Art Daily 印章方案 B。
 
-三案自决结果：A 案（宋体单字「语」）胜出，参数与 Art Daily 的「艺」严格一致，
-仅换字符，保证「同一系列」的第一眼血脉。
+三案打分定稿：A（详见 sketches/icon-candidates/RESULT.md）。
+
+输出：icon-192, icon-512, icon-512-maskable, apple-touch-icon(180),
+      favicon-32, favicon.ico。
 """
 from pathlib import Path
 
@@ -23,16 +23,13 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "icons"
 
-# 与 Art Daily 严格同色（保证系列感的第一底层）
+# 与 Art Daily 严格同色（系列感第一底层）
 BG = "#F5F1EA"      # 米白大底
-CARD = "#FDFBF7"    # 白内衬
-FG = "#8C6D3F"      # 金褐（画框 + 字形）
+FG = "#8C6D3F"      # 金褐（字形 + 辅助元素）
 
 SS = 4  # 超采样倍数
 
 SONGTI = "/System/Library/Fonts/Supplemental/Songti.ttc"
-STHEITI = "/System/Library/Fonts/STHeiti Light.ttc"
-BODONI_SC = "/System/Library/Fonts/Supplemental/Bodoni 72 Smallcaps Book.ttf"
 
 
 def load_font(path, size):
@@ -64,43 +61,24 @@ def _render_glyph(char, font_path, size):
     return img, _ink_bbox(img, BG)
 
 
-def make(size, out, char="语", font_path=SONGTI,
-         comp_frac=0.84, glyph_frac=0.72):
-    """生成单个图标。
-
-    参数与 Art Daily make_icons.py 一致（保证同系列）：
-      size       输出边长像素
-      comp_frac  画框外缘占画布的比例（maskable 需 ≤0.56 落入安全圆）
-      glyph_frac 字形高度占内衬可绘区的比例
-    """
-    S = size * SS
-    img = Image.new("RGB", (S, S), BG)
-    d = ImageDraw.Draw(img)
-
-    comp = int(S * comp_frac)
-    ox = (S - comp) // 2
-    oy = (S - comp) // 2
-    fw = max(1, int(comp * 0.010))        # 画框线宽（≈1%）
-    mw = max(2, int(comp * 0.024))        # 白内衬宽度（≈2.4%）
-
-    # 金褐直角画框
-    d.rectangle([ox, oy, ox + comp - 1, oy + comp - 1],
-                outline=FG, width=fw)
-    # 白内衬
-    mx0, my0 = ox + fw, oy + fw
-    mx1, my1 = ox + comp - fw, oy + comp - fw
-    d.rectangle([mx0, my0, mx1, my1], fill=CARD)
-
-    # 字形按墨心居中于内衬可绘区
-    inner = mx1 - mx0 - 2 * mw
-    g, ib = _render_glyph(char, font_path, int(inner * glyph_frac))
+def _paste_glyph_centered(canvas, char, font_path, glyph_h, cx, cy):
+    """按墨心 bbox 光学居中，把字符贴到 canvas 的 (cx, cy)。"""
+    g, ib = _render_glyph(char, font_path, glyph_h)
     icx = (ib[0] + ib[2]) // 2
     icy = (ib[1] + ib[3]) // 2
-    cx = (mx0 + mw + mx1 - mw) // 2
-    cy = (my0 + mw + my1 - mw) // 2
     gx = cx - icx + ib[0]
     gy = cy - icy + ib[1]
-    img.paste(g.crop(ib), (gx, gy))
+    canvas.paste(g.crop(ib), (gx, gy))
+    return ib  # 返回墨迹 bbox 给辅助元素定位
+
+
+def make_a(size, out, char="语", font_path=SONGTI, glyph_frac=0.52):
+    """A 案：纯留白单字。米白底 + 中央金褐 Songti「语」。"""
+    S = size * SS
+    img = Image.new("RGB", (S, S), BG)
+
+    cx, cy = S // 2, S // 2
+    _paste_glyph_centered(img, char, font_path, int(S * glyph_frac), cx, cy)
 
     img = img.resize((size, size), Image.Resampling.LANCZOS)
     img.save(out, "PNG")
@@ -108,88 +86,89 @@ def make(size, out, char="语", font_path=SONGTI,
     return img
 
 
-def make_bilingual(size, out, top_char="A", top_font=BODONI_SC,
-                   bot_char="语", bot_font=SONGTI,
-                   comp_frac=0.84, glyph_frac=0.42):
-    """双语上下分栏构图（C 案）。上英下中，中间金色细线分隔。"""
+def make_b(size, out, char="语", font_path=SONGTI, glyph_frac=0.46):
+    """B 案：字下细金线（题跋感）。字略小，下方 1.5%px 金褐水平细线，
+    长度=字宽 65%，距字底 8%S。"""
     S = size * SS
     img = Image.new("RGB", (S, S), BG)
     d = ImageDraw.Draw(img)
 
-    comp = int(S * comp_frac)
-    ox = (S - comp) // 2
-    oy = (S - comp) // 2
-    fw = max(1, int(comp * 0.010))
-    mw = max(2, int(comp * 0.024))
+    # 字上抬，给下面线留位置
+    cx = S // 2
+    cy = S // 2 - int(S * 0.04)
+    ib = _paste_glyph_centered(img, char, font_path, int(S * glyph_frac), cx, cy)
 
-    d.rectangle([ox, oy, ox + comp - 1, oy + comp - 1],
-                outline=FG, width=fw)
-    mx0, my0 = ox + fw, oy + fw
-    mx1, my1 = ox + comp - fw, oy + comp - fw
-    d.rectangle([mx0, my0, mx1, my1], fill=CARD)
-
-    inner_w = mx1 - mx0 - 2 * mw
-    inner_h = my1 - my0 - 2 * mw
-    cy_top = my0 + mw + inner_h // 4
-    cy_bot = my0 + mw + 3 * inner_h // 4
-    cx = (mx0 + mw + mx1 - mw) // 2
-
-    # 中间金色分隔细线（宽度 = 内边距 60%）
-    line_len = int(inner_w * 0.6)
-    y_mid = my0 + mw + inner_h // 2
+    glyph_w = ib[2] - ib[0]
+    line_len = int(glyph_w * 0.65)
+    line_w = max(2, int(S * 0.015))
+    line_y = cy + int(S * glyph_frac / 2) + int(S * 0.08)
     d.rectangle(
-        [cx - line_len // 2, y_mid - fw // 2,
-         cx + line_len // 2, y_mid + max(1, fw // 2)],
+        [cx - line_len // 2, line_y,
+         cx + line_len // 2, line_y + line_w],
         fill=FG,
     )
 
-    # 顶部字符
-    gt, ibt = _render_glyph(top_char, top_font, int(inner_h * glyph_frac))
-    gx = cx - (ibt[0] + ibt[2]) // 2 + ibt[0]
-    gy = cy_top - (ibt[1] + ibt[3]) // 2 + ibt[1]
-    img.paste(gt.crop(ibt), (gx, gy))
+    img = img.resize((size, size), Image.Resampling.LANCZOS)
+    img.save(out, "PNG")
+    print("wrote", out)
+    return img
 
-    # 底部字符
-    gb, ibb = _render_glyph(bot_char, bot_font, int(inner_h * glyph_frac))
-    gx = cx - (ibb[0] + ibb[2]) // 2 + ibb[0]
-    gy = cy_bot - (ibb[1] + ibb[3]) // 2 + ibb[1]
-    img.paste(gb.crop(ibb), (gx, gy))
+
+def make_c(size, out, char="语", font_path=SONGTI, glyph_frac=0.50):
+    """C 案：字加金点（印章感）。字略小，右上角 4%R 金褐圆点，
+    呼应 Art Daily wordmark 印章方案 B。"""
+    S = size * SS
+    img = Image.new("RGB", (S, S), BG)
+    d = ImageDraw.Draw(img)
+
+    cx, cy = S // 2, S // 2
+    ib = _paste_glyph_centered(img, char, font_path, int(S * glyph_frac), cx, cy)
+
+    # 金点在字的右上方，位置以字墨迹 bbox 为准
+    dot_r = max(4, int(S * 0.04))
+    # 字右上角坐标
+    glyph_right = cx + (ib[2] - ib[0]) // 2
+    glyph_top = cy - (ib[3] - ib[1]) // 2
+    dot_cx = glyph_right + int(S * 0.045)
+    dot_cy = glyph_top + int(S * 0.02)
+    d.ellipse(
+        [dot_cx - dot_r, dot_cy - dot_r,
+         dot_cx + dot_r, dot_cy + dot_r],
+        fill=FG,
+    )
 
     img = img.resize((size, size), Image.Resampling.LANCZOS)
     img.save(out, "PNG")
     print("wrote", out)
     return img
+
+
+# 最终定稿=A案
+MAKERS = {"A": make_a, "B": make_b, "C": make_c}
 
 
 def build_candidates():
     """三案自决：为每案生成一张 512×512 预览。"""
     root = ROOT / "sketches" / "icon-candidates"
-    # A：宋体单字「语」，参数完全同 Art Daily
-    make(512, root / "A-tongstruct" / "preview-512.png",
-         char="语", font_path=SONGTI, comp_frac=0.84, glyph_frac=0.72)
-    # B：Bodoni SC 大写「T」（Tutor 首字母，衬线小型大写）
-    make(512, root / "B-english-T" / "preview-512.png",
-         char="T", font_path=BODONI_SC, comp_frac=0.84, glyph_frac=0.75)
-    # C：双语上下「A / 语」
-    make_bilingual(512, root / "C-bilingual" / "preview-512.png",
-                   top_char="A", top_font=BODONI_SC,
-                   bot_char="语", bot_font=SONGTI,
-                   comp_frac=0.84, glyph_frac=0.42)
+    (root / "A-pure-white").mkdir(parents=True, exist_ok=True)
+    (root / "B-tail-line").mkdir(parents=True, exist_ok=True)
+    (root / "C-dot").mkdir(parents=True, exist_ok=True)
+    make_a(512, root / "A-pure-white" / "preview-512.png")
+    make_b(512, root / "B-tail-line" / "preview-512.png")
+    make_c(512, root / "C-dot" / "preview-512.png")
 
 
 def build_final(char="语", font_path=SONGTI):
-    """输出最终定稿的完整尺寸族（写入 icons/）。"""
+    """输出最终定稿 A 案的完整尺寸族（写入 icons/）。"""
     OUT.mkdir(exist_ok=True)
-    make(192, OUT / "icon-192.png", char, font_path, 0.84, 0.72)
-    make(512, OUT / "icon-512.png", char, font_path, 0.84, 0.72)
-    # maskable：画框缩到 0.55 落入安全圆，字形略大保可读
-    make(512, OUT / "icon-512-maskable.png",
-         char, font_path, 0.55, 0.78)
-    make(180, OUT / "apple-touch-icon.png",
-         char, font_path, 0.84, 0.72)
-    # favicon-32 / favicon.ico
-    fav = make(32, OUT / "favicon-32.png",
-               char, font_path, 0.90, 0.78)
+    # 各尺寸主图（无框留白版，glyph_frac=0.52）
+    make_a(192, OUT / "icon-192.png", char, font_path, 0.52)
+    make_a(512, OUT / "icon-512.png", char, font_path, 0.52)
+    # maskable：字形缩到 0.42 落入 iOS 安全圆（掩码后仍需可读，四周更宽留白）
+    make_a(512, OUT / "icon-512-maskable.png", char, font_path, 0.42)
+    make_a(180, OUT / "apple-touch-icon.png", char, font_path, 0.52)
+    # favicon-32 / favicon.ico （小尺寸字形放大到 0.62 保可读）
+    fav = make_a(32, OUT / "favicon-32.png", char, font_path, 0.62)
     fav.save(OUT / "favicon.ico", "ICO",
              sizes=[(16, 16), (32, 32)])
     print("wrote", OUT / "favicon.ico")

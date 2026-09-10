@@ -201,9 +201,16 @@ async function main() {
 
   const spokenBeforeReplay = await page.evaluate(() => window.__mock.spokenTexts.length);
   await speakButtons[0].click();
-  const playingClassAdded = await page.evaluate(() => document.querySelectorAll('.msg-speak-btn.playing').length > 0);
-  await page.waitForTimeout(80);
-  const playingClassRemoved = await page.evaluate(() => document.querySelectorAll('.msg-speak-btn.playing').length === 0);
+  let playingClassAdded = false;
+  try {
+    await page.waitForFunction(() => document.querySelectorAll('.msg-speak-btn.playing').length > 0, null, { timeout: 2000 });
+    playingClassAdded = true;
+  } catch (e) { /* stays false, reported as FAIL below */ }
+  let playingClassRemoved = false;
+  try {
+    await page.waitForFunction(() => document.querySelectorAll('.msg-speak-btn.playing').length === 0, null, { timeout: 2000 });
+    playingClassRemoved = true;
+  } catch (e) { /* stays false, reported as FAIL below */ }
   const spokenAfterReplay = await page.evaluate(() => window.__mock.spokenTexts.length);
   check('点击重播按钮触发朗读（spokenTexts 增加）', spokenAfterReplay > spokenBeforeReplay);
   check('朗读中按钮切到 playing 态', playingClassAdded);

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 A · SF Symbols 原生等效（stroke 1.7px, Regular）</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F3EC;
+    --ink-1:#1C1B18;
+    --ink-2:#57534E;
+    --ink-3:#8D8880;
+    --rule:#E8E1D4;
+    --primary:#B23A28;
+    --gold:#B08842;
+    --moss:#253830;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink-1);font-family:'Inter','PingFang SC',sans-serif;}
+  .container{max-width:960px;margin:0 auto;padding:40px 24px 120px;}
+  h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:32px;margin:0 0 6px;letter-spacing:-0.01em;}
+  .subtitle{color:var(--ink-3);font-size:14px;margin-bottom:36px;}
+  .section-title{font-family:'Source Serif 4',serif;font-weight:600;font-size:20px;margin:36px 0 14px;border-bottom:1px solid var(--rule);padding-bottom:8px;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .card{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:20px 16px;text-align:center;}
+  .card svg{width:32px;height:32px;stroke:var(--ink-1);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 10px;}
+  .card .name{font-size:12px;color:var(--ink-2);}
+  .card .code{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-3);margin-top:4px;}
+
+  /* Tab bar demo (bottom) */
+  .tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--paper);border-top:1px solid var(--rule);height:82px;display:flex;padding-bottom:20px;z-index:10;}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);font-size:11px;gap:4px;cursor:pointer;}
+  .tab.active{color:var(--primary);}
+  .tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* Applied context blocks */
+  .demo{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .demo-block{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:18px;}
+  .demo-title{font-family:'Source Serif 4',serif;font-weight:600;font-size:16px;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .demo-title svg{width:22px;height:22px;stroke:var(--ink-1);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .shortcut{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--rule);border-radius:4px;margin-bottom:8px;}
+  .shortcut svg{width:22px;height:22px;stroke:var(--ink-1);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+  .shortcut .label{font-size:14px;font-weight:500;flex:1;}
+  .shortcut .arrow{stroke:var(--ink-3);width:16px;height:16px;}
+  .stat-row{display:flex;gap:8px;align-items:center;padding:8px 0;color:var(--ink-2);font-size:13px;}
+  .stat-row svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .stat-row .val{color:var(--ink-1);font-family:'JetBrains Mono',monospace;font-weight:500;margin-left:auto;}
+  .scene-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--rule);border-radius:4px;margin-bottom:6px;}
+  .scene-card svg{width:26px;height:26px;stroke:var(--ink-1);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;color:var(--moss);}
+  .scene-card .t{font-family:'Source Serif 4',serif;font-size:15px;font-weight:600;}
+  .scene-card .s{font-size:12px;color:var(--ink-3);}
+  .status-row{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:13px;}
+  .status-row svg{width:18px;height:18px;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .status-row.ok svg{stroke:var(--moss);}
+  .status-row.err svg{stroke:var(--primary);}
+  .btn-icon{width:36px;height:36px;border:1px solid var(--rule);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#fff;cursor:pointer;}
+  .btn-icon svg{width:18px;height:18px;stroke:var(--ink-1);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .nav-back{width:40px;height:40px;border:1px solid var(--rule);border-radius:20px;background:rgba(247,243,236,0.55);backdrop-filter:blur(14px);display:inline-flex;align-items:center;justify-content:center;}
+  .nav-back svg{width:20px;height:20px;stroke:var(--ink-1);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .caption{color:var(--ink-3);font-size:12px;line-height:1.55;margin:8px 0 24px;font-family:'Inter',sans-serif;}
+  .caption strong{color:var(--ink-2);}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>方案 A · SF Symbols 原生等效</h1>
+  <div class="subtitle">Stroke 1.7px · Regular weight · 24×24 base · line-cap round · 与 iOS 系统 icon 视觉同源</div>
+
+  <!-- Tab bar 语义 -->
+  <div class="section-title">Tab bar 5 项（沿用现有）</div>
+  <div class="grid">
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/></svg><div class="name">首页 · House</div><div class="code">house</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg><div class="name">词库 · Book</div><div class="code">book.closed</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4V6z"/></svg><div class="name">对话 · Bubble</div><div class="code">bubble.left</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h10M4 15h16M4 20h10"/></svg><div class="name">语法 · List</div><div class="code">list.bullet</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg><div class="name">我 · Person</div><div class="code">person</div></div>
+  </div>
+
+  <!-- 页面标题 icon -->
+  <div class="section-title">页面标题（替换 📊📖💬👤）</div>
+  <div class="demo">
+    <div class="demo-block">
+      <div class="demo-title"><svg viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/></svg>首页</div>
+      <div class="demo-title"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>词库</div>
+      <div class="demo-title"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4V6z"/></svg>对话</div>
+      <div class="demo-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>我</div>
+    </div>
+    <div class="caption">
+      <strong>规则</strong>：页面标题 icon = 该 tab 的 24×24 SVG，位于 h1 前 8px 处，stroke 1.7px。<br>
+      <strong>去 emoji 效果</strong>：📊 → 房屋（复用 tab 首页 icon）；📖 → 书本剖面；💬 → 单气泡；👤 → 人像。
+    </div>
+  </div>
+
+  <!-- 对话场景 icon（10 个）+ 分类 -->
+  <div class="section-title">对话场景卡（10 个场景 icon + 3 个分类）</div>
+  <div class="grid">
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M6 8h9v6a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V8z"/><path d="M15 10h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v2M11 3v2"/></svg><div class="name">咖啡店点单</div><div class="code">cup.and.saucer</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 12h16M4 12l3-6h10l3 6M4 12v6h16v-6"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg><div class="name">机场过海关</div><div class="code">airplane</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/><path d="M6 12h2M16 12h2M6 16h2M16 16h2"/></svg><div class="name">酒店入住</div><div class="code">bed.double</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><path d="m9 15 2-6 4 2-6 4z"/></svg><div class="name">问路</div><div class="code">location.north</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M8 3v3M16 3v3"/><path d="M4 7h16v13H4z"/><path d="M4 11h16"/><circle cx="9" cy="15" r="1"/><circle cx="13" cy="15" r="1"/></svg><div class="name">约朋友出行</div><div class="code">calendar</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M3 12c0-4 4-8 9-8s9 4 9 8-4 8-9 8c-1.5 0-3-.4-4-1l-4 1 1-4c-1-1.5-2-3-2-4z"/></svg><div class="name">和邻居闲聊</div><div class="code">bubble.left.fill</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M9 15c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg><div class="name">表达感受</div><div class="code">face.smiling</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M8 7V4h8v3"/><path d="M4 12h16"/><path d="M11 11v3"/></svg><div class="name">工作会议</div><div class="code">briefcase</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="m4 5 8 7 8-7"/></svg><div class="name">邮件跟进</div><div class="code">envelope</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 5h9l7 7v7H4z"/><path d="M13 5v6h6"/></svg><div class="name">面试</div><div class="code">doc.text</div></div>
+    <div class="card"><svg viewBox="0 0 24 24"><path d="M2 12h6l2-8 4 16 2-8h6"/></svg><div class="name">自由对话</div><div class="code">waveform</div></div>
+    <div class="card" style="background:var(--paper);border-style:dashed;"><svg viewBox="0 0 24 24" style="stroke:var(--ink-3);"><path d="M12 2v20M2 12h20"/></svg><div class="name">分类语义</div><div class="code">travel/daily/work<br>只用文字 chip</div></div>
+  </div>
+  <div class="caption">
+    <strong>决策：分类 chip 去 icon</strong>——现有"🛫 旅行 / 💬 日常 / 💼 工作"三个 chip 的 emoji 是装饰性重复（chip 自带边框和标签已足够），去掉后 chip 更干净、消除三种表情视觉冲突。<br>
+    <strong>场景 icon</strong>：10 个 monoline 24×24 stroke 1.7px；语义精简（airplane 代 airport-customs、doc.text 代 interview）。
+  </div>
+
+  <!-- 状态/操作 icon -->
+  <div class="section-title">状态与操作按钮</div>
+  <div class="demo">
+    <div class="demo-block">
+      <div style="font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;margin-bottom:12px;">语法练习（替换 ✅❌🎯）</div>
+      <div class="status-row ok"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg><span>正确写法：I have been working</span></div>
+      <div class="status-row err"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span>答错了。习惯性动作用一般现在时</span></div>
+      <div class="status-row"><svg viewBox="0 0 24 24" style="stroke:var(--gold);"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><span>本题考点：时态区分</span></div>
+    </div>
+    <div class="demo-block">
+      <div style="font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;margin-bottom:12px;">对话工具栏（替换 🔊🔇 + ✎ + ← + 🎉）</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
+        <span class="btn-icon" title="朗读开"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9c1 1 1.5 2 1.5 3s-.5 2-1.5 3"/></svg></span>
+        <span class="btn-icon" title="朗读关"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="m17 10 4 4M21 10l-4 4"/></svg></span>
+        <span class="btn-icon" title="纠错"><svg viewBox="0 0 24 24"><path d="M4 20 20 4M14 4l6 6M4 20l6-2"/></svg></span>
+        <span class="nav-back" title="返回"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="btn-icon" title="完成"><svg viewBox="0 0 24 24" style="stroke:var(--moss);"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span>
+      </div>
+      <div style="color:var(--ink-3);font-size:11px;">speaker.wave / speaker.slash / pencil / chevron.left / checkmark.circle</div>
+    </div>
+  </div>
+
+  <!-- 首页 shortcut / streak / 数据 -->
+  <div class="section-title">首页 shortcut + streak + 数据</div>
+  <div class="demo">
+    <div class="demo-block">
+      <div style="font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;margin-bottom:12px;">快捷入口</div>
+      <div class="shortcut">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4V6z"/></svg>
+        <span class="label">对话</span>
+        <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+      </div>
+      <div class="shortcut">
+        <svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>
+        <span class="label">词库</span>
+        <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+      </div>
+    </div>
+    <div class="demo-block">
+      <div style="font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;margin-bottom:12px;">学习仪表盘（替换 🔥📎📋）</div>
+      <div class="stat-row"><svg viewBox="0 0 24 24"><path d="M12 3c0 4-4 5-4 9a4 4 0 0 0 8 0c0-2-1-4-2-5 0 2-1 3-2 3 1-2 0-5 0-7z"/></svg><span>连续学习天数</span><span class="val">7</span></div>
+      <div class="stat-row"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="1"/><path d="M4 10h16M8 3v6M16 3v6"/></svg><span>本周分钟</span><span class="val">128</span></div>
+      <div class="stat-row"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-6M22 20H2"/></svg><span>词汇掌握</span><span class="val">42%</span></div>
+    </div>
+  </div>
+
+  <!-- 我 页面设置项 -->
+  <div class="section-title">我 · 设置项（替换 🔄🗑）</div>
+  <div class="demo">
+    <div class="demo-block">
+      <div class="shortcut">
+        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15 6.7L3 21"/><path d="M3 12a9 9 0 0 1 15-6.7L21 3"/><path d="M21 3v6h-6M3 21v-6h6"/></svg>
+        <span class="label">重新测评</span>
+        <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+      </div>
+      <div class="shortcut">
+        <svg viewBox="0 0 24 24" style="stroke:var(--primary);"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>
+        <span class="label" style="color:var(--primary);">清除所有学习数据</span>
+      </div>
+    </div>
+    <div class="caption">arrow.triangle.2.circlepath（重新）· trash（删除，唯一使用书签红的 destructive 场景）</div>
+  </div>
+
+  <div style="margin-top:36px;padding:16px;background:#fff;border:1px dashed var(--rule);border-radius:4px;color:var(--ink-2);font-size:13px;line-height:1.7;">
+    <strong>方案 A 手法总结</strong><br>
+    · <strong>Stroke</strong>：1.7px（与 tab bar 完全一致）<br>
+    · <strong>Cap/Join</strong>：round / round<br>
+    · <strong>基础尺寸</strong>：24×24 viewBox<br>
+    · <strong>实际渲染</strong>：tab 24px / 页面标题 22px / 场景卡 26px / 状态 18px / shortcut 22px / arrow 16px<br>
+    · <strong>颜色</strong>：默认 ink-1 描边；destructive = primary 书签红；success = moss 墨绿；accent = gold 古铜金<br>
+    · <strong>fill</strong>：全部 none（默认），激活态 tab item 用 currentColor 改色，不做填充状态<br>
+    · <strong>emoji 处理</strong>：全部换成 line-icon，分类 chip 去 icon（只留文字）
+  </div>
+</div>
+
+<nav class="tabbar">
+  <div class="tab active"><svg viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11h-6v-7h-4v7H4z"/></svg>首页</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>词库</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4V6z"/></svg>对话</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h10M4 15h16M4 20h10"/></svg>语法</div>
+  <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>我</div>
+</nav>
+</body>
+</html>

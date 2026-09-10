@@ -1,18 +1,18 @@
 /* data/plan-data.js —— 4 周入门学习计划（硬编码，不做自动生成）
  * 结构：
- *   PLAN_WEEKS: [{ week, theme, emoji, tasks: [{ id, type, title, detail, targetId? }] }]
+ *   PLAN_WEEKS: [{ week, theme, tasks: [{ id, type, title, detail, targetId? }] }]
  *   type: 'vocab' | 'dialogue' | 'grammar'
  *     vocab    -> targetId 对应 window.VOCAB_DATA 中的词条 id，跳转到 #vocab
  *     grammar  -> targetId 对应 window.App.grammarData 中的知识点 id，跳转到 #grammar/<id>
  *     dialogue -> 跳转到 #conversation（场景对话模块占位/未来对接）
  * 每周固定 5 个词汇任务 + 3 次对话练习 + 2 个语法点 = 10 个任务。
+ * 注：原 emoji 字段已按 t_fae84c24 icon 系统去 emoji 移除——周主题不配 icon，仅用 WEEK N + theme 文字。
  */
 (function () {
   window.PLAN_WEEKS = [
     {
       week: 1,
       theme: '打招呼与自我介绍',
-      emoji: '👋',
       tasks: [
         { id: 'w1-v1', type: 'vocab', title: '学一句地道的早安问候', detail: 'Good morning! How did you sleep?', targetId: 'daily-001' },
         { id: 'w1-v2', type: 'vocab', title: '学会\u201c好久不见\u201d怎么说', detail: 'Long time no see!', targetId: 'daily-002' },
@@ -29,7 +29,6 @@
     {
       week: 2,
       theme: '日常生活与购物',
-      emoji: '🛒',
       tasks: [
         { id: 'w2-v1', type: 'vocab', title: '学一句聊天气的话', detail: "The weather's been really nice lately.", targetId: 'daily-007' },
         { id: 'w2-v2', type: 'vocab', title: '学会约朋友喝咖啡', detail: 'Do you want to grab a coffee sometime?', targetId: 'daily-013' },
@@ -46,7 +45,6 @@
     {
       week: 3,
       theme: '旅行与交通',
-      emoji: '🛫',
       tasks: [
         { id: 'w3-v1', type: 'vocab', title: '学会向路人问路', detail: 'Excuse me, where is the nearest subway station?', targetId: 'travel-001' },
         { id: 'w3-v2', type: 'vocab', title: '学会问去机场的路', detail: 'How do I get to the airport from here?', targetId: 'travel-002' },
@@ -63,7 +61,6 @@
     {
       week: 4,
       theme: '工作场景入门',
-      emoji: '💼',
       tasks: [
         { id: 'w4-v1', type: 'vocab', title: '学会开会开场白', detail: "Let's get started, shall we?", targetId: 'work-001' },
         { id: 'w4-v2', type: 'vocab', title: '学会请人讲解数据', detail: 'Could you walk us through the numbers?', targetId: 'work-002' },

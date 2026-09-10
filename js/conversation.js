@@ -9,7 +9,7 @@
  *   'history'                   -> 历史对话列表
  */
 (function () {
-  var CATEGORY_LABEL = { travel: '🛫 旅行', daily: '💬 日常', work: '💼 工作' };
+  var CATEGORY_LABEL = { travel: '旅行', daily: '日常', work: '工作' };
   var scenariosCache = null;
   var currentSession = null; // 当前正在进行的会话对象（内存态，随时同步落盘）
   var currentTurnIndex = 0;
@@ -38,7 +38,7 @@
 
   // ---------- 入口页 ----------
   function renderEntry(container) {
-    container.innerHTML = '<div class="page" data-page="conversation"><h1 class="page-title">💬 对话</h1><div id="conv-entry-body"></div></div>';
+    container.innerHTML = '<div class="page" data-page="conversation"><h1 class="page-title">' + window.Icons.get('bubble.left', { size: 22 }) + '<span>对话</span></h1><div id="conv-entry-body"></div></div>';
     var body = container.querySelector('#conv-entry-body');
     loadScenarios().then(function (scenarios) {
       var byCategory = {};
@@ -49,7 +49,7 @@
 
       var html = '<div class="conv-entry-list">';
       html += '<div class="conv-freechat-card" data-action="free-chat">';
-      html += '<span class="icon">🗨️</span><div><div class="title">自由对话</div><div class="sub">想聊什么聊什么，导师自适应你的水平</div></div>';
+      html += '<span class="icon">' + window.Icons.get('waveform', { size: 26 }) + '</span><div><div class="title">自由对话</div><div class="sub">想聊什么聊什么，导师自适应你的水平</div></div>';
       html += '</div>';
 
       Object.keys(CATEGORY_LABEL).forEach(function (cat) {
@@ -57,7 +57,7 @@
         html += '<div><div class="conv-section-title">' + CATEGORY_LABEL[cat] + '</div><div class="conv-scene-grid">';
         byCategory[cat].forEach(function (s) {
           html += '<div class="conv-scene-card" data-action="open-scene" data-scene-id="' + s.id + '">' +
-            '<span class="icon">' + s.icon + '</span>' +
+            '<span class="icon">' + window.Icons.get(s.icon, { size: 26 }) + '</span>' +
             '<span class="title">' + escapeHtml(s.title) + '</span>' +
             '<span class="cat">' + cat + '</span>' +
             '</div>';
@@ -95,10 +95,10 @@
         body.innerHTML = '<p class="review-empty">场景不存在。</p>';
         return;
       }
-      var html = '<button class="page-header-back" data-action="back">‹</button>';
+      var html = '<button class="page-header-back" data-action="back" aria-label="返回">' + window.Icons.get('chevron.left', { size: 20 }) + '</button>';
       html += '<div class="conv-setup">';
       html += '<div class="conv-setup-card">';
-      html += '<span class="icon-big">' + scene.icon + '</span>';
+      html += '<span class="icon-big">' + window.Icons.get(scene.icon, { size: 48 }) + '</span>';
       html += '<h2>' + escapeHtml(scene.title) + '</h2>';
       html += '<p class="setting-zh">' + escapeHtml(scene.settingZh) + '</p>';
       html += '<div class="goals-title">本场对话目标</div>';
@@ -159,22 +159,33 @@
     }
 
     function renderChatShell() {
-      var title = currentSession.sceneId ? currentSession.sceneIcon + ' ' + currentSession.sceneTitle : '🗨️ 自由对话';
+      // sceneIcon 可能是 SF 命名（新会话）或 emoji 字符（旧会话）——兼容处理
+      var sceneIconSvg = '';
+      if (currentSession.sceneId) {
+        var iconName = currentSession.sceneIcon;
+        // 若已经是 SF 命名（走 Icons 词表），转 SVG；否则视作 emoji fallback，包一层跳过
+        if (iconName && window.Icons && window.Icons.PATHS[iconName]) {
+          sceneIconSvg = window.Icons.get(iconName, { size: 20 }) + ' ';
+        }
+      } else {
+        sceneIconSvg = window.Icons.get('waveform', { size: 20 }) + ' ';
+      }
+      var titleText = currentSession.sceneId ? currentSession.sceneTitle : '自由对话';
       var autoReadOn = window.Speech.getAutoRead();
       body.innerHTML =
-        '<button class="page-header-back" data-action="back">‹</button>' +
+        '<button class="page-header-back" data-action="back" aria-label="返回">' + window.Icons.get('chevron.left', { size: 20 }) + '</button>' +
         '<div class="conv-chat">' +
         '<div class="conv-chat-header">' +
-        '<span class="title">' + escapeHtml(title) + '</span>' +
+        '<span class="title">' + sceneIconSvg + escapeHtml(titleText) + '</span>' +
         '<div class="actions">' +
-        '<button class="icon-btn' + (autoReadOn ? ' active' : '') + '" data-action="toggle-read" title="朗读开关">' + (autoReadOn ? '🔊' : '🔇') + '</button>' +
+        '<button class="icon-btn' + (autoReadOn ? ' active' : '') + '" data-action="toggle-read" title="朗读开关">' + window.Icons.get(autoReadOn ? 'speaker.wave' : 'speaker.slash', { size: 18 }) + '</button>' +
         '<button class="btn-end-chat" data-action="end">结束对话</button>' +
         '</div></div>' +
         '<div class="conv-messages" id="conv-messages"></div>' +
         '<div class="conv-composer">' +
         '<input type="text" id="conv-input" placeholder="用英语打字，或按住麦克风说话..." />' +
-        '<button class="btn-mic" id="conv-mic" title="按住说话">🎤</button>' +
-        '<button class="btn-send" id="conv-send" disabled>➤</button>' +
+        '<button class="btn-mic" id="conv-mic" title="按住说话" aria-label="按住说话">' + window.Icons.get('waveform', { size: 20 }) + '</button>' +
+        '<button class="btn-send" id="conv-send" disabled aria-label="发送">' + window.Icons.get('chevron.right', { size: 18 }) + '</button>' +
         '</div>' +
         (window.Speech.isRecognitionSupported() ? '' : '<div class="mic-unsupported-hint">当前浏览器不支持语音识别，请用文字输入</div>') +
         '</div>';
@@ -186,8 +197,9 @@
       body.querySelector('[data-action="toggle-read"]').addEventListener('click', function (e) {
         var next = !window.Speech.getAutoRead();
         window.Speech.setAutoRead(next);
-        e.target.classList.toggle('active', next);
-        e.target.textContent = next ? '🔊' : '🔇';
+        var btn = e.currentTarget;
+        btn.classList.toggle('active', next);
+        btn.innerHTML = window.Icons.get(next ? 'speaker.wave' : 'speaker.slash', { size: 18 });
       });
 
       var input = body.querySelector('#conv-input');
@@ -252,7 +264,7 @@
           html += '<div class="msg-row tutor">' +
             '<div class="msg-tutor-head"><span class="msg-tutor-avatar">T</span></div>' +
             '<div class="bubble-tutor">' + escapeHtml(m.text) + '</div>' +
-            '<button class="msg-speak-btn" data-speak="' + escapeHtml(m.text) + '">🔊 朗读</button>' +
+            '<button class="msg-speak-btn" data-speak="' + escapeHtml(m.text) + '" aria-label="朗读">' + window.Icons.get('speaker.wave', { size: 14 }) + '<span>朗读</span></button>' +
             '</div>';
         } else {
           html += '<div class="msg-row user">' +
@@ -262,7 +274,7 @@
           }
           if (m.corrections && m.corrections.length) {
             html += '<div class="correction-tag">' + m.corrections.map(function (c) {
-              return '<span class="item">✎ <span class="wrong">' + escapeHtml(c.wrong) + '</span> → ' + escapeHtml(c.right) + '</span>';
+              return '<span class="item">' + window.Icons.get('pencil', { size: 12 }) + ' <span class="wrong">' + escapeHtml(c.wrong) + '</span> ' + window.Icons.get('chevron.right', { size: 12 }) + ' ' + escapeHtml(c.right) + '</span>';
             }).join('') + '</div>';
           }
           html += '</div>';
@@ -375,16 +387,16 @@
       return;
     }
     var review = session.review || buildReview(session);
-    var html = '<button class="page-header-back" data-action="back">‹</button>';
+    var html = '<button class="page-header-back" data-action="back" aria-label="返回">' + window.Icons.get('chevron.left', { size: 20 }) + '</button>';
     html += '<div class="conv-review">';
     html += '<div class="review-hero"><div class="title">对话复盘</div><div class="sub">' + escapeHtml(session.sceneTitle) + '</div></div>';
 
     html += '<div class="review-section"><h3>错误清单</h3>';
     if (review.errors.length === 0) {
-      html += '<p class="review-empty">本次没有检测到语法错误 🎉</p>';
+      html += '<p class="review-empty">本次没有检测到语法错误</p>';
     } else {
       html += review.errors.map(function (e) {
-        return '<div class="review-error-item"><span class="wrong">' + escapeHtml(e.wrong) + '</span> → <span class="right">' + escapeHtml(e.right) + '</span><span class="zh">' + escapeHtml(e.zh || '') + '</span></div>';
+        return '<div class="review-error-item"><span class="wrong">' + escapeHtml(e.wrong) + '</span> ' + window.Icons.get('chevron.right', { size: 12 }) + ' <span class="right">' + escapeHtml(e.right) + '</span><span class="zh">' + escapeHtml(e.zh || '') + '</span></div>';
       }).join('');
     }
     html += '</div>';

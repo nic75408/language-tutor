@@ -14,10 +14,10 @@
 (function () {
   var STORAGE_KEY = 'vocabProgress';
   var SCENES = [
-    { key: 'all', label: '全部', emoji: '🗂️' },
-    { key: 'travel', label: '旅行', emoji: '🛫' },
-    { key: 'daily', label: '日常', emoji: '💬' },
-    { key: 'work', label: '工作', emoji: '💼' }
+    { key: 'all', label: '全部' },
+    { key: 'travel', label: '旅行' },
+    { key: 'daily', label: '日常' },
+    { key: 'work', label: '工作' }
   ];
   var STATUS_LABEL = { new: '新词', learning: '学习中', mastered: '已掌握' };
   var STATUS_ORDER = ['new', 'learning', 'mastered'];
@@ -177,7 +177,6 @@
     return SCENES.map(function (s) {
       var active = s.key === state.activeScene ? ' active' : '';
       return '<button class="vocab-scene-tab' + active + '" data-scene="' + s.key + '">' +
-        '<span class="vocab-scene-emoji">' + s.emoji + '</span>' +
         '<span>' + s.label + '</span>' +
         '</button>';
     }).join('');
@@ -191,7 +190,7 @@
     }).join('');
 
     var sceneInfo = SCENES.filter(function (s) { return s.key === word.scene; })[0];
-    var sceneLabel = sceneInfo ? sceneInfo.emoji + ' ' + sceneInfo.label : word.scene;
+    var sceneLabel = sceneInfo ? sceneInfo.label : word.scene;
 
     var detailHtml = '';
     if (isExpanded) {
@@ -255,11 +254,11 @@
 
     var cardsHtml = filtered.length
       ? filtered.map(function (w) { return renderWordCard(w, progress); }).join('')
-      : '<div class="vocab-empty">这个分类下暂无待复习词条 🎉</div>';
+      : '<div class="vocab-empty">这个分类下暂无待复习词条</div>';
 
     container.innerHTML =
       '<div class="page" data-page="vocab">' +
-        '<h1 class="page-title">📖 词库</h1>' +
+        '<h1 class="page-title">' + window.Icons.get('book.closed', { size: 22 }) + '<span>词库</span></h1>' +
         '<div class="vocab-summary">' +
           '<span>共 ' + allWords.length + ' 词</span>' +
           '<span>·</span>' +

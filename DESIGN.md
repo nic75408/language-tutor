@@ -433,6 +433,73 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 
 **语言学习助手同样沿用**赤拔在艺术手册 t_a312968d 定稿的**左上 40×40 胶囊 + 20px 左箭头**返回按钮范式。iOS 系统级返回全是左箭头（不是 X）——语言学习助手全站也是 push 栈，无 modal sheet 页。所有二级页面（对话详情、语法详情、词条详情）统一用此。
 
+### Icon System（全站统一 · t_fae84c24 定稿）
+
+**手法：SF Symbols 原生等效**（stroke 1.7px · Regular weight · 24×24 viewBox）。全站 icon **一律用内联 SVG**，禁止 emoji、禁止字符（`←→✅❌🎉` 等）、禁止图片。这是"iOS 官方 icon 库"原话的 Web 端最优实现。
+
+**图形规范**：
+- `stroke-width: 1.7`（tab bar 现有值，全站沿用；深色底控件不降低）
+- `stroke-linecap: round`、`stroke-linejoin: round`
+- `fill: none`（激活态可选背景反转，不做 fill 内填）
+- `viewBox="0 0 24 24"` 为基础网格
+- **实际渲染尺寸表**：
+
+| 使用位置 | 尺寸 | 说明 |
+|---|---|---|
+| Tab bar | 24×24 | 现有值 |
+| 页面标题（h1 前） | 22×22 | 略轻于 Serif 600 大标题字，不抢戏 |
+| 场景卡 / shortcut 卡 | 26×26 | 卡片主 icon |
+| 状态行 / stat-row / btn-icon | 18×18 | 内联小 icon |
+| 箭头（arrow / chevron） | 16×16 | 列表项右侧 chevron |
+| Nav back（沿用） | 20×20 | 40×40 胶囊内 |
+
+**颜色 token**：
+- 默认 `ink-1 #1C1B18` 描边
+- Tab 激活 = `primary #B23A28`（书签红），未激活 = `ink-3 #8D8880`
+- Success = `moss #253830`（例句正确、任务完成态）
+- Destructive = `primary #B23A28`（清除数据、纠错 X）
+- Accent 强调 = `gold #B08842`（考点圆圈、成就徽章）
+
+**Icon 词表**（22 类语义 → SF Symbols 命名 → 用途）：
+
+| 语义 | SF 命名 | 用途 |
+|---|---|---|
+| `house` | 首页 | tab / 页面标题 / shortcut |
+| `book.closed` | 词库 | tab / 页面标题 / shortcut |
+| `bubble.left` | 对话 | tab / 页面标题 / shortcut / 场景闲聊 |
+| `list.bullet` | 语法 | tab / 页面标题 |
+| `person` | 我 | tab / 页面标题 |
+| `flame` | 连续天数（streak） | 首页 / 个人中心 |
+| `calendar` | 学习计划 / 约朋友出行 | 首页 stat / 场景 |
+| `chart.bar` | 词汇掌握 | 首页 stat |
+| `cup.and.saucer` | 咖啡店点单 | 场景 |
+| `airplane` | 机场过海关 | 场景 |
+| `bed.double` | 酒店入住 | 场景 |
+| `location.north` | 问路 | 场景 |
+| `face.smiling` | 表达感受 | 场景 |
+| `briefcase` | 工作会议 | 场景 |
+| `envelope` | 邮件跟进 | 场景 |
+| `doc.text` | 面试 / 学习记录 | 场景 |
+| `waveform` | 自由对话 | 场景 |
+| `speaker.wave` / `speaker.slash` | 朗读开/关 | 对话工具栏 |
+| `pencil` | 纠错标签（替 `✎`） | 对话下方 |
+| `checkmark.circle` | 完成 / 例句正确 | 语法练习 / 任务完成 |
+| `xmark.circle` | 答错 | 语法练习 |
+| `arrow.triangle.2.circlepath` | 重新测评 | 个人中心 |
+| `trash` | 清除数据 | 个人中心（唯一使用 primary destructive 场景） |
+| `chevron.right` / `chevron.left` | 列表箭头 / 返回 | 通用 |
+| `target` | 考点标记（gold） | 语法练习 |
+
+**分类 chip 去 icon**：对话/词库中"旅行 / 日常 / 工作"分类 chip **只用文字，不加 icon**——原本的 🛫💬💼 是装饰性重复（chip 已有边框和标签），去掉后消除三种 emoji 表情视觉冲突。
+
+**空态不用 emoji**：原本"🎉 全部完成"这类空态提示改用短促文字（例："全部完成"），不加 icon 亦不加 emoji——空态本身就是干净的，加图反而营造"游戏化奖章"感（与 Don't 冲突）。
+
+**禁止清单**：
+- ❌ 任何 emoji 字符（Apple 3D 立体渲染是最强"AI 感"来源）
+- ❌ 字符替代箭头（`← → ✎ ✅ ❌`）
+- ❌ 不同图标手法混用（如 tab bar 用 SVG 而页面标题用 emoji）
+- ❌ 引入其它图标库（Font Awesome、Material Icons）—— 手法不一致
+
 ## Do's and Don'ts
 
 ### Do
@@ -471,3 +538,28 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 
 ### 沿用：全局返回/退出交互（源自 artbook t_a312968d）
 所有二级页面统一左上角 40×40 雾玻璃胶囊 + 20px 左箭头返回按钮（`page-header-back`）；右滑边缘 ≥80px 触发返回（**起于左边缘、向右方向滑**——iOS 系统级手势方向）；push 栈模型（全站无 modal sheet）。此约定不由本任务发起，来自赤拔在艺术手册项目里已拍板的决定，语言学习助手直接沿用。
+
+### 2026-09-10 · t_fae84c24 · 全站 icon 换 SF Symbols 风格（去 emoji）
+**决策**：全站图标统一走 **A 案 SF Symbols 原生等效**（stroke 1.7px · Regular weight · 24×24 SVG viewBox），全面替换 22 类 emoji 和字符（📊📖💬👤🔥🎯✅❌🎉🛫🛂🏨🧭📅💼📧🗂🔊🔇✎🔄🗑←→ 等 26 处使用点），从 B 案吸收"页面标题 icon Regular weight 不加粗"，从 C 案吸收"toggle 型控件激活态背景反转（可选）"。
+
+**依据**：
+1. 三案自评 A 23 / B 22 / C 18——A 在"一致性 + 与 tab bar 同源 + 触屏可辨识 + 无 AI 感"四项都是满分或次高。
+2. 赤拔原话"都用 iOS 官方的 icon 库"——SF Symbols Regular 就是 iOS 系统 icon 默认样式，A 是最直译。
+3. Tab bar 已经是 1.7px stroke（t_51de6008 从 C 案吸收）——全站推广 = tab bar 从"孤岛干净"变"全站同源"，零重构。
+4. B 案 1.2px 在 stat-row 18px 尺寸下 vision 已确认发糊，语言学习工具小 icon 太多，不能牺牲清晰度。
+5. C 案 12 场景 icon 全带 20% fill 形成"色块阵列"，与 Newsprint"纸面文字为主"克制美学冲突——语言学习不是 dashboard 编辑器，不需要那种强激活语义。
+
+**病灶诊断**（26 处 emoji 使用统计）：
+- **页面标题装饰性 emoji**：`📊 首页` `📖 词库` `💬 对话` `👤 我`（4 处，最刺眼的"AI 感"来源，Apple 3D 立体渲染）
+- **对话场景卡 emoji**：10 个场景各一（☕🛂🏨🧭💬📅🙂💼📧🗂），6 种视觉密度混杂
+- **分类装饰 emoji**：🛫💬💼（3 处，冗余装饰）
+- **状态/操作字符**：`✅❌🎯 ✎ 🔊🔇 🔄🗑 ← →`（14 处，与 line-svg 手法混杂）
+
+**风险与预案**：
+- **iPhone webview 加载体积**：全站新增约 30 个 inline SVG（每个 ~200 字节），总增 ~6KB gzipped，性能影响可忽略；不引入图标库外部依赖。
+- **手写 SVG 语义偏差**：不是真的 SF Symbols license 资产（Apple 不允许 Web 直接用 SF Symbols 文件），而是 SVG icon 手工描出**视觉等效**版本，Regular weight/圆角/round cap 与 SF Symbols Regular 手法完全一致。
+- **未来场景扩展**：新增场景（现有 10 个之外）需要在 Icon 词表补录一条并沿用 stroke 1.7px 手法，不允许"新场景用 emoji 临时占位"。
+
+**兼容策略**：
+- 场景 icon 定义现在存 `data/scenarios.json` 的 `icon` 字段（原本存 emoji 字符），字段改为 SF 命名字符串（如 `"cup.and.saucer"`），渲染层查 `js/icons.js` 词表拿到 SVG string 后 innerHTML 注入。
+- `js/icons.js` 是本次新增的 icon 词表模块——所有 SVG 定义集中此处，其它页面调用 `Icons.get(name, {size, color})` 拿字符串。

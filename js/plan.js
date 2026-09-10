@@ -6,9 +6,9 @@
 (function () {
   var STORAGE_KEY = 'lt_plan_progress_v1';
   var TYPE_META = {
-    vocab: { emoji: '📖', label: '词汇' },
-    dialogue: { emoji: '💬', label: '对话' },
-    grammar: { emoji: '📐', label: '语法' }
+    vocab: { icon: 'book.closed', label: '词汇' },
+    dialogue: { icon: 'bubble.left', label: '对话' },
+    grammar: { icon: 'list.bullet', label: '语法' }
   };
 
   function esc(s) {
@@ -80,16 +80,17 @@
 
   function renderTask(task, progress) {
     var done = isTaskDone(progress, task.id);
-    var meta = TYPE_META[task.type] || { emoji: '📎', label: '' };
+    var meta = TYPE_META[task.type] || { icon: 'doc.text', label: '' };
     var detailHtml = task.detail ? '<div class="plan-task-detail">' + esc(task.detail) + '</div>' : '';
     var href = taskTargetHref(task);
-    var linkHtml = href ? '<a class="plan-task-link" href="' + href + '">去完成 →</a>' : '';
+    var linkHtml = href ? '<a class="plan-task-link" href="' + href + '">去完成' + window.Icons.get('chevron.right', { size: 12 }) + '</a>' : '';
+    var iconSvg = window.Icons ? window.Icons.get(meta.icon, { size: 14 }) : '';
 
     return '<div class="plan-task' + (done ? ' done' : '') + '" data-task-id="' + task.id + '">' +
       '<button class="plan-task-checkbox' + (done ? ' checked' : '') + '" data-toggle-task="' + task.id + '" aria-label="标记完成"></button>' +
       '<div class="plan-task-body">' +
         '<div class="plan-task-top">' +
-          '<span class="plan-task-type">' + meta.emoji + ' ' + meta.label + '</span>' +
+          '<span class="plan-task-type">' + iconSvg + '<span>' + meta.label + '</span></span>' +
         '</div>' +
         '<div class="plan-task-title">' + esc(task.title) + '</div>' +
         detailHtml +
@@ -104,7 +105,6 @@
 
     return '<section class="plan-week" data-week="' + week.week + '">' +
       '<div class="plan-week-header">' +
-        '<span class="plan-week-emoji">' + week.emoji + '</span>' +
         '<div class="plan-week-heading">' +
           '<div class="plan-week-label">WEEK ' + week.week + '</div>' +
           '<h2 class="plan-week-theme">' + esc(week.theme) + '</h2>' +
@@ -125,8 +125,8 @@
 
     container.innerHTML =
       '<div class="page plan-page" data-page="plan">' +
-        '<button class="grammar-header-back" id="plan-back" aria-label="返回">←</button>' +
-        '<h1 class="page-title">📋 4 周学习计划</h1>' +
+        '<button class="grammar-header-back" id="plan-back" aria-label="返回">' + window.Icons.get('chevron.left', { size: 20 }) + '</button>' +
+        '<h1 class="page-title">' + window.Icons.get('calendar', { size: 22 }) + '<span>4 周学习计划</span></h1>' +
         '<div class="plan-overview">' +
           '<div class="plan-overview-label">总体进度</div>' +
           '<div class="plan-overview-bar"><div class="plan-overview-bar-fill" style="width:' + overall + '%"></div></div>' +

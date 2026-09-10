@@ -130,6 +130,7 @@
     }
     progress[word.id] = entry;
     saveProgress(progress);
+    if (window.App.learningLog) window.App.learningLog.recordToday();
   }
 
   function reviewWord(word, quality) {
@@ -147,6 +148,7 @@
     }
     progress[word.id] = entry;
     saveProgress(progress);
+    if (window.App.learningLog) window.App.learningLog.recordToday();
     return entry;
   }
 

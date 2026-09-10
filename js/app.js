@@ -7,7 +7,7 @@
  * #assessment 是首次评估的全屏流程，不在底部 Tab Bar 中出现。
  */
 (function () {
-  var ROUTES = ['home', 'vocab', 'conversation', 'grammar', 'profile', 'assessment'];
+  var ROUTES = ['home', 'vocab', 'conversation', 'grammar', 'profile', 'assessment', 'plan'];
   var TAB_ROUTES = ['home', 'vocab', 'conversation', 'grammar', 'profile'];
   var DEFAULT_ROUTE = 'home';
 

@@ -133,6 +133,9 @@
         var feedback = container.querySelector('.grammar-quiz-feedback[data-feedback="' + qIdx + '"]');
         feedback.classList.add(isCorrect ? 'is-correct' : 'is-wrong');
         feedback.textContent = (isCorrect ? '✅ 答对了！' : '❌ 答错了。') + ' ' + q.explanation;
+
+        if (window.App.quizLog) window.App.quizLog.record(item.id, isCorrect);
+        if (window.App.learningLog) window.App.learningLog.recordToday();
       });
     });
   }

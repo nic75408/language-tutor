@@ -960,6 +960,423 @@ body {
 }
 
 /* ==========================================================================
+   首页仪表盘（今日任务卡 + 本周进度环 + 连续天数 + 快捷入口）
+   ========================================================================== */
+
+.home-dashboard-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.home-progress-ring {
+  --ring-deg: 0deg;
+  flex: 0 0 auto;
+  width: 92px;
+  height: 92px;
+  border-radius: var(--radius-full);
+  background: conic-gradient(var(--color-primary) var(--ring-deg), var(--color-paper-alt) 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-progress-ring-inner {
+  width: 74px;
+  height: 74px;
+  border-radius: var(--radius-full);
+  background: var(--color-paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-progress-ring-percent {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.home-progress-ring-label {
+  font-size: 10px;
+  color: var(--color-ink-3);
+  margin-top: 2px;
+}
+
+.home-streak-card {
+  flex: 1 1 auto;
+  background: var(--color-gold-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-streak-num {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--color-gold);
+}
+
+.home-streak-label {
+  font-size: 12px;
+  color: var(--color-gold);
+  margin-top: 4px;
+}
+
+.home-section {
+  margin-top: var(--space-8);
+}
+
+.home-section-title {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 0 0 var(--space-3);
+}
+
+.home-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.home-task-empty {
+  color: var(--color-ink-2);
+  font-size: 14px;
+}
+
+.home-task-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+}
+
+.home-task-checkbox {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-ink-3);
+  background: var(--color-paper);
+  cursor: pointer;
+  padding: 0;
+}
+
+.home-task-checkbox.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.home-task-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-task-type {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-3);
+}
+
+.home-task-title {
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.home-task-card.done .home-task-title {
+  color: var(--color-ink-3);
+  text-decoration: line-through;
+}
+
+.home-shortcut-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.home-shortcut {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  text-decoration: none;
+  color: var(--color-ink);
+  font-size: 20px;
+}
+
+.home-shortcut span {
+  font-size: 11px;
+  color: var(--color-ink-2);
+}
+
+/* ==========================================================================
+   学习计划模块（plan.js）—— 4 周入门计划
+   ========================================================================== */
+
+.plan-page {
+  position: relative;
+}
+
+.plan-overview {
+  margin: var(--space-4) 0 var(--space-6);
+}
+
+.plan-overview-label {
+  font-size: 13px;
+  color: var(--color-ink-2);
+  margin-bottom: var(--space-2);
+}
+
+.plan-overview-bar {
+  height: 8px;
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.plan-overview-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s ease-out;
+}
+
+.plan-overview-percent {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-ink-3);
+  margin-top: var(--space-1);
+}
+
+.plan-week {
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.plan-week-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.plan-week-emoji {
+  font-size: 28px;
+}
+
+.plan-week-heading {
+  flex: 1 1 auto;
+}
+
+.plan-week-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-3);
+}
+
+.plan-week-theme {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 2px 0 0;
+}
+
+.plan-week-percent {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-primary);
+}
+
+.plan-week-progress {
+  height: 4px;
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: var(--space-3) 0 var(--space-4);
+}
+
+.plan-week-progress-bar {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s ease-out;
+}
+
+.plan-week-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.plan-task {
+  display: flex;
+  gap: var(--space-3);
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+}
+
+.plan-task-checkbox {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-ink-3);
+  background: var(--color-paper);
+  cursor: pointer;
+  padding: 0;
+}
+
+.plan-task-checkbox.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.plan-task-body {
+  flex: 1 1 auto;
+}
+
+.plan-task-top {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-3);
+}
+
+.plan-task-title {
+  font-size: 14px;
+  color: var(--color-ink);
+  margin-top: 2px;
+}
+
+.plan-task.done .plan-task-title {
+  color: var(--color-ink-3);
+  text-decoration: line-through;
+}
+
+.plan-task-detail {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-ink-2);
+  margin-top: 4px;
+}
+
+.plan-task-link {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: 12px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* ==========================================================================
+   个人中心仪表盘（profile.js）—— 学习时长/词汇进度/连续天数 + 薄弱领域 + 设置
+   ========================================================================== */
+
+.profile-dashboard,
+.profile-section {
+  margin-top: var(--space-8);
+}
+
+.profile-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.profile-stat-card {
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-stat-num {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.profile-stat-label {
+  font-size: 11px;
+  color: var(--color-ink-2);
+  margin-top: 4px;
+}
+
+.profile-weak-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.profile-weak-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  text-decoration: none;
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+.profile-weak-rate {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-primary);
+}
+
+.profile-weak-empty {
+  color: var(--color-ink-2);
+  font-size: 13px;
+}
+
+.profile-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.profile-settings-item {
+  text-align: left;
+  background: var(--color-paper-alt);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.profile-settings-item.danger {
+  color: var(--color-primary);
+}
+
+/* ==========================================================================
    对话模块（Conversation）
    ========================================================================== */
 

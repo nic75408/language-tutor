@@ -152,3 +152,221 @@ body {
   font-size: 15px;
   cursor: pointer;
 }
+
+/* ==========================================================================
+   词库模块（vocab）
+   ========================================================================== */
+
+.vocab-summary {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.vocab-scene-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vocab-scene-tab {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vocab-scene-tab.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.vocab-scene-emoji {
+  font-size: 14px;
+}
+
+.vocab-due-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.vocab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vocab-empty {
+  margin-top: 40px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.vocab-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.vocab-card-main {
+  padding: 14px;
+  cursor: pointer;
+}
+
+.vocab-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vocab-en {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.vocab-status-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.vocab-status-badge.status-new {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.vocab-status-badge.status-learning {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.vocab-status-badge.status-mastered {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.vocab-phonetic {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.vocab-zh {
+  font-size: 14px;
+  color: var(--color-text);
+  margin-top: 6px;
+}
+
+.vocab-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.vocab-scene-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.vocab-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.vocab-card-detail {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.vocab-detail-row {
+  margin-top: 12px;
+}
+
+.vocab-detail-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.vocab-example {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.vocab-review-actions {
+  margin-top: 14px;
+}
+
+.vocab-review-btns {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.vocab-review-btn {
+  flex: 1 1 0;
+  min-width: 64px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: none;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  color: #fff;
+}
+
+.vocab-review-btn.again {
+  background: #ef4444;
+}
+
+.vocab-review-btn.hard {
+  background: #f59e0b;
+}
+
+.vocab-review-btn.good {
+  background: #3b82f6;
+}
+
+.vocab-review-btn.easy {
+  background: #10b981;
+}

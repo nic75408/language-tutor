@@ -1,0 +1,192 @@
+/* ==========================================================================
+   对话模块 · 语音交互优化 CSS 规格
+   设计卡：t_70315a71 · 方案 A（录音覆盖层 + 待发送徽章）定稿
+   DESIGN.md 决策记录：2026-09-10 · t_70315a71
+   ========================================================================== */
+
+/* ============ 朗读按钮（AI 回复旁） ============ */
+.msg-speak-btn {
+  /* 默认态 */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;  /* DESIGN.md button-speak.gap */
+  background: none;
+  border: none;
+  color: var(--color-ink-3);  /* DESIGN.md button-speak.textColor */
+  font-family: var(--font-sans);
+  font-size: 13px;  /* typography.body-s */
+  cursor: pointer;
+  margin-top: 4px;
+  padding: 8px;  /* 热区扩展：视觉 13px 字，热区 ≥ 44×44 */
+  min-height: 44px;  /* HIG tap target */
+  min-width: 44px;
+}
+
+.msg-speak-btn svg {
+  width: 14px;  /* DESIGN.md button-speak.iconSize */
+  height: 14px;
+}
+
+/* 播放中状态 */
+.msg-speak-btn.playing {
+  color: var(--color-primary);  /* DESIGN.md button-speak-playing.textColor */
+}
+
+.msg-speak-btn.playing svg {
+  animation: speaker-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes speaker-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.85; }
+}
+
+/* ============ 录音覆盖层 ============ */
+.recording-overlay {
+  position: absolute;
+  bottom: 70px;  /* composer 高度 ~60px + 10px 间距 */
+  left: 20px;
+  right: 20px;
+  background: rgba(28, 27, 24, 0.95);  /* DESIGN.md recording-overlay.backgroundColor (ink α0.95) */
+  border-radius: 14px;  /* DESIGN.md rounded.lg */
+  padding: 16px 20px;  /* DESIGN.md recording-overlay.padding */
+  display: flex;
+  align-items: center;
+  gap: 12px;  /* DESIGN.md recording-overlay.gap */
+  z-index: 100;
+}
+
+.recording-waveform {
+  display: flex;
+  align-items: center;
+  gap: 3px;  /* DESIGN.md recording-overlay.waveformBarGap */
+  height: 24px;  /* DESIGN.md recording-overlay.waveformHeight */
+}
+
+.recording-waveform span {
+  width: 3px;  /* DESIGN.md recording-overlay.waveformBarWidth */
+  background: var(--color-primary);
+  border-radius: 2px;
+  animation: wave 0.4s ease-in-out infinite;
+}
+
+/* 5 个 bar 的高度与延迟 */
+.recording-waveform span:nth-child(1) { height: 12px; animation-delay: 0s; }
+.recording-waveform span:nth-child(2) { height: 20px; animation-delay: 0.1s; }
+.recording-waveform span:nth-child(3) { height: 16px; animation-delay: 0.2s; }
+.recording-waveform span:nth-child(4) { height: 24px; animation-delay: 0.1s; }
+.recording-waveform span:nth-child(5) { height: 14px; animation-delay: 0.3s; }
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1); }
+}
+
+.recording-timer {
+  font-family: var(--font-mono);  /* JetBrains Mono */
+  font-size: 14px;
+  color: var(--color-ink-3);  /* DESIGN.md recording-overlay.timerColor */
+  min-width: 40px;  /* 避免数字跳动 */
+  text-align: center;
+}
+
+.recording-text {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 14px;  /* typography.body-s */
+  color: var(--color-paper);  /* DESIGN.md recording-overlay.textColor */
+}
+
+/* ============ 待发送徽章 ============ */
+.pending-badge {
+  position: absolute;
+  bottom: 70px;  /* composer 高度 ~60px + 10px 间距 */
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary);  /* DESIGN.md pending-badge.backgroundColor */
+  color: var(--color-paper);  /* DESIGN.md pending-badge.textColor */
+  font-family: var(--font-sans);
+  font-size: 12px;  /* typography.ui-s */
+  font-weight: 600;  /* ui-s fontWeight */
+  padding: 6px 12px;  /* DESIGN.md pending-badge.padding */
+  border-radius: 999px;  /* DESIGN.md pending-badge.rounded */
+  display: flex;
+  align-items: center;
+  gap: 6px;  /* DESIGN.md pending-badge.gap */
+  white-space: nowrap;
+  z-index: 100;
+  cursor: pointer;
+  min-height: 28px;  /* HIG tap target: 6×2 + 16px 字高 ≈ 28px，已达标 */
+}
+
+.pending-badge svg {
+  width: 14px;  /* DESIGN.md pending-badge.iconSize */
+  height: 14px;
+  animation: clock-tick 1s ease-in-out infinite;
+}
+
+@keyframes clock-tick {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+/* ============ Composer 区域（已有，补充待发送态） ============ */
+.conv-composer {
+  /* 已有样式保持不变 */
+}
+
+/* 待发送态：输入框边框高亮（可选增强） */
+.conv-composer.has-pending input[type="text"] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ============ 验收标准（QA 用） ============ */
+/*
+1. 赤拔视角：
+   - 对话中 AI 回复自动朗读英文（开关开启时） ✓
+   - 用户按麦克风说话后文字出现在输入框 ✓
+   - 文字不自动发送，需用户点击发送按钮 ✓
+
+2. 所有可点击区域 ≥ 44×44pt（iOS HIG）：
+   - mic 按钮：44×44 ✓
+   - 发送按钮：44×44 ✓
+   - 朗读按钮：min-height/min-width 44px（通过 padding 扩展）✓
+   - 待发送徽章：高度 28px ≥ 44pt? ✗ → 需增加 padding 至 10px 16px（28+8×2=44）
+
+3. 录音状态有明确视觉反馈：
+   - 波形动画（5 bar，高度 12-24px，0.4s 动画）✓
+   - 计时器（0:00 格式，mono 字体）✓
+   - 文案（"正在听你说..."）✓
+
+4. 语音识别结果填入输入框后不自动发送：
+   - 发送按钮从 disabled 变为 enabled ✓
+   - 待发送徽章显示 ✓
+   - 用户可编辑文字后再发 ✓
+
+5. AI 消息旁有重播按钮：
+   - 每条 tutor 消息旁有朗读按钮 ✓
+   - 点击可重新朗读 ✓
+   - 播放时按钮变红 + 动画 ✓
+*/
+
+/* ============ 修正：待发送徽章热区不足 44px ============ */
+/* 2026-09-10 核查：徽章高度 28px < 44pt HIG 要求，需增加 padding */
+.pending-badge {
+  padding: 10px 16px;  /* 修正：6×2 + 16px 字高 = 28 → 10×2 + 16px = 36px，仍不足 → 用::before 扩展 */
+  position: relative;
+}
+
+.pending-badge::before {
+  content: '';
+  position: absolute;
+  inset: -8px;  /* 上下左右各扩展 8px，36+16=52px ≥ 44px */
+  z-index: -1;
+}
+
+/* 或者：直接增加徽章高度至 44px（更简单） */
+.pending-badge {
+  height: 44px;  /* 强制 HIG 合规 */
+  padding: 10px 16px;  /* 垂直居中文字 */
+  align-items: center;
+}

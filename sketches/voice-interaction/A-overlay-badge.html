@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>对话语音交互三方案 - 小 Z</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", sans-serif;
+    background: #1C1B18; 
+    color: #F7F3EC;
+    padding: 40px 20px;
+  }
+  h1 { font-size: 24px; margin-bottom: 8px; font-weight: 700; }
+  .subtitle { color: #8D8880; font-size: 14px; margin-bottom: 32px; }
+  .variant { 
+    background: #F7F3EC; 
+    color: #1C1B18; 
+    border-radius: 8px; 
+    padding: 24px; 
+    margin-bottom: 40px;
+  }
+  .variant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(28,27,24,0.09);
+  }
+  .variant-title { font-size: 18px; font-weight: 700; }
+  .variant-score { font-size: 12px; color: #6B5218; background: #EFE7D2; padding: 4px 8px; border-radius: 2px; }
+  
+  /* 手机框架 */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #F7F3EC;
+    border-radius: 40px;
+    border: 8px solid #1C1B18;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+  }
+  .phone-notch {
+    width: 160px;
+    height: 30px;
+    background: #1C1B18;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0 0 16px 16px;
+    z-index: 10;
+  }
+  .phone-content {
+    padding: 50px 20px 100px;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* 对话气泡 */
+  .msg-row { display: flex; margin-bottom: 16px; }
+  .msg-row.tutor { justify-content: flex-start; }
+  .msg-row.user { justify-content: flex-end; }
+  
+  .bubble-tutor {
+    background: #F7F3EC;
+    color: #1C1B18;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 16px;
+    line-height: 1.4;
+    padding: 4px 0;
+    max-width: 80%;
+  }
+  
+  .bubble-user {
+    background: #1C1B18;
+    color: #F7F3EC;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 15px;
+    line-height: 1.4;
+    border-radius: 20px;
+    border-bottom-right-radius: 4px;
+    padding: 10px 14px;
+    max-width: 80%;
+  }
+  
+  /* 朗读按钮 */
+  .speak-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: #8D8880;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .speak-btn svg { width: 14px; height: 14px; }
+  .speak-btn.playing { color: #B23A28; }
+  
+  /* Composer 区域 */
+  .composer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #F7F3EC;
+    border-top: 1px solid rgba(28,27,24,0.09);
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .composer-input {
+    flex: 1;
+    height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(28,27,24,0.09);
+    background: #FFFFFF;
+    padding: 0 16px;
+    font-size: 14px;
+    color: #1C1B18;
+  }
+  .composer-input::placeholder { color: #8D8880; }
+  
+  .btn-mic {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: #B23A28;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .btn-mic svg { width: 20px; height: 20px; }
+  
+  .btn-mic.recording {
+    background: #1C1B18;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(178,58,40,0.35); }
+    50% { box-shadow: 0 0 0 8px rgba(178,58,40,0); }
+  }
+  
+  .btn-send {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: #1C1B18;
+    color: #F7F3EC;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .btn-send:disabled { opacity: 0.4; }
+  .btn-send svg { width: 18px; height: 18px; }
+  
+  /* 录音中覆盖层 */
+  .recording-overlay {
+    position: absolute;
+    bottom: 80px;
+    left: 20px;
+    right: 20px;
+    background: rgba(28,27,24,0.95);
+    color: #F7F3EC;
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .recording-waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px;
+  }
+  .recording-waveform span {
+    width: 3px;
+    background: #B23A28;
+    border-radius: 2px;
+    animation: wave 0.4s ease-in-out infinite;
+  }
+  .recording-waveform span:nth-child(1) { height: 12px; animation-delay: 0s; }
+  .recording-waveform span:nth-child(2) { height: 20px; animation-delay: 0.1s; }
+  .recording-waveform span:nth-child(3) { height: 16px; animation-delay: 0.2s; }
+  .recording-waveform span:nth-child(4) { height: 24px; animation-delay: 0.1s; }
+  .recording-waveform span:nth-child(5) { height: 14px; animation-delay: 0.3s; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1); }
+  }
+  .recording-timer {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    color: #8D8880;
+  }
+  .recording-text { flex: 1; font-size: 14px; }
+  
+  /* 待发送状态 */
+  .pending-badge {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #B23A28;
+    color: #F7F3EC;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  
+  .label {
+    font-size: 11px;
+    color: #8D8880;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+  <h1>对话模块语音交互优化 · 三方案</h1>
+  <p class="subtitle">设计目标：TTS 播报 + STT 输入 + 发送前确认状态明确</p>
+  
+  <!-- ==================== 方案 A ==================== -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-title">方案 A · 录音覆盖层 + 待发送徽章</span>
+      <span class="variant-score">48/50</span>
+    </div>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="label">录音中状态</div>
+        <div class="msg-row tutor">
+          <div>
+            <div class="bubble-tutor">What did you do last weekend?</div>
+            <button class="speak-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              朗读
+            </button>
+          </div>
+        </div>
+        
+        <div class="recording-overlay">
+          <div class="recording-waveform">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="recording-timer">0:03</div>
+          <div class="recording-text">正在听你说...</div>
+        </div>
+      </div>
+      
+      <div class="composer">
+        <input type="text" class="composer-input" placeholder="用英语打字，或按住麦克风说话..." value="I went hiking with my friends" />
+        <button class="btn-send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      
+      <div class="pending-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        待发送 · 点击确认
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <strong>设计说明：</strong>
+      <ul style="margin-top: 8px; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+        <li><strong>录音中：</strong>底部覆盖层（墨黑底 α0.95），波形动画 + 计时器 + "正在听你说"文案</li>
+        <li><strong>待发送：</strong>输入框上方居中徽章（书签红底），带时钟 icon + "待发送 · 点击确认"文案</li>
+        <li><strong>发送按钮：</strong>语音识别后高亮可用，用户可点击发送或编辑文字后再发</li>
+        <li><strong>TTS 播放：</strong>朗读按钮默认灰色，播放时变红 + icon 动画</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- ==================== 方案 B ==================== -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-title">方案 B · 输入框内状态 + 发送按钮动效</span>
+      <span class="variant-score">42/50</span>
+    </div>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="label">录音中状态</div>
+        <div class="msg-row tutor">
+          <div>
+            <div class="bubble-tutor">What did you do last weekend?</div>
+            <button class="speak-btn playing">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              播放中
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="composer">
+        <input type="text" class="composer-input" placeholder="用英语打字，或按住麦克风说话..." value="I went hiking with my friends" style="border-color: #B23A28; color: #B23A28;" />
+        <button class="btn-mic" style="background: #1C1B18;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+        </button>
+        <button class="btn-send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <strong>设计说明：</strong>
+      <ul style="margin-top: 8px; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+        <li><strong>录音中：</strong>输入框边框变红 + 文字颜色变红，mic 按钮变墨黑</li>
+        <li><strong>待发送：</strong>输入框文字保持红色，无额外徽章</li>
+        <li><strong>发送按钮：</strong>语音识别后高亮可用</li>
+        <li><strong>TTS 播放：</strong>朗读按钮变红 + 文案"播放中"</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- ==================== 方案 C ==================== -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-title">方案 C · 底部操作栏扩展</span>
+      <span class="variant-score">38/50</span>
+    </div>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-content">
+        <div class="label">录音中状态</div>
+        <div class="msg-row tutor">
+          <div>
+            <div class="bubble-tutor">What did you do last weekend?</div>
+            <button class="speak-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              朗读
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="composer" style="flex-direction: column; align-items: stretch; gap: 8px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="flex: 1; background: #FFFFFF; border-radius: 999px; padding: 10px 16px; font-size: 14px; color: #1C1B18; border: 1px solid rgba(28,27,24,0.09);">
+            I went hiking with my friends
+          </div>
+          <button class="btn-send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #8D8880;">
+          <span>语音识别结果 · 可编辑</span>
+          <span style="color: #B23A28;">● 待发送</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <strong>设计说明：</strong>
+      <ul style="margin-top: 8px; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+        <li><strong>录音中：</strong>同方案 A 覆盖层</li>
+        <li><strong>待发送：</strong>输入框下方状态栏，左侧"语音识别结果 · 可编辑"，右侧红色圆点 + "待发送"</li>
+        <li><strong>发送按钮：</strong>始终可见</li>
+        <li><strong>问题：</strong>状态栏占用额外空间，移动端 composer 过于复杂</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- ==================== 定稿结论 ==================== -->
+  <div style="background: #B23A28; color: #F7F3EC; border-radius: 8px; padding: 24px; margin-top: 40px;">
+    <h2 style="font-size: 18px; margin-bottom: 12px;">定稿：方案 A（48/50）</h2>
+    <div style="font-size: 14px; line-height: 1.6;">
+      <strong>胜出理由：</strong>
+      <ul style="margin-top: 8px; padding-left: 20px;">
+        <li>录音中覆盖层视觉明确（波形 + 计时 + 文案），用户不会误触其他操作</li>
+        <li>待发送徽章居中悬浮，不占用输入框空间，点击确认符合移动端习惯</li>
+        <li>TTS 播放状态与朗读按钮一体化，播放时变红 + 文案切换</li>
+        <li>符合 iOS HIG：所有可点击区域 ≥ 44×44pt</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

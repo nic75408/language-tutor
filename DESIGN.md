@@ -270,6 +270,45 @@ components:
     typography: "{typography.english-body}"
     padding: 4px
 
+  # ============ 对话模块 · 语音交互组件 ============
+  # 朗读按钮（AI 回复旁，默认态）
+  button-speak:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-3}"
+    typography: "{typography.body-s}"
+    iconSize: 14px
+    gap: 4px
+  # 朗读按钮（播放中）
+  button-speak-playing:
+    backgroundColor: "transparent"
+    textColor: "{colors.primary}"
+    iconSize: 14px
+    gap: 4px
+  
+  # 录音覆盖层（录音中悬浮于 composer 上方）
+  recording-overlay:
+    backgroundColor: "rgba(28,27,24,0.95)"  # ink α0.95
+    rounded: "{rounded.lg}"
+    padding: 16px 20px
+    gap: 12px
+    waveformHeight: 24px
+    waveformBarWidth: 3px
+    waveformBarGap: 3px
+    timerTypography: "{typography.meta}"
+    timerColor: "{colors.ink-3}"
+    textTypography: "{typography.body-s}"
+    textColor: "{colors.paper}"
+  
+  # 待发送徽章（语音识别完成后，悬浮于输入框上方居中）
+  pending-badge:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.paper}"
+    typography: "{typography.ui-s}"
+    rounded: "{rounded.full}"
+    padding: 6px 12px
+    gap: 6px
+    iconSize: 14px
+  
   # ============ 徽章（学习状态） ============
   badge-new:
     backgroundColor: "{colors.primary-soft}"
@@ -543,6 +582,32 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 1. iOS HIG「Provide ample touch targets for interactive elements. Try to maintain a minimum tappable area of 44pt x 44pt for all controls.」
 2. 赤拔只在 iPhone 上用本产品——桌面 hover 态在真机上不存在，触控热区不足是**功能性缺陷**而非风格差异
 3. 与 DESIGN.md「视觉尺寸」的张力用「视觉 N · 热区 44」透明扩展器解决（D1 A 方案 24/25 胜）
+
+### 2026-09-10 · t_70315a71 · 对话模块语音交互优化（TTS+STT+ 发送确认）
+
+**决策**：对话模块语音交互三案自决，**方案 A（录音覆盖层 + 待发送徽章）48/50 胜**。实施：
+1. **AI 回复自动 TTS 播报**：开关开启时，每条 AI 英文回复自动朗读；每条消息旁保留朗读按钮，可重播
+2. **录音中状态**：底部覆盖层（墨黑底 α0.95），含波形动画（5 条，高 12-24px 随机）+ 计时器（0:00 格式）+ "正在听你说..."文案
+3. **待发送状态**：语音识别完成后，输入框上方居中悬浮徽章（书签红底），含时钟 icon + "待发送 · 点击确认"文案
+4. **发送前确认**：语音识别文字填入输入框后**不自动发送**，用户可点击发送按钮或编辑后再发
+
+**依据**：
+1. 赤拔原话："对话的时候需要直接用语音，然后我这边输入的时候也需要有语音输入过去；语音输入完之后需要有个发送的状态"
+2. 三案自评 48/42/38——**A 覆盖层 + 徽章胜**（录音中视觉明确不误触 10、待发送状态独立不占输入框空间 10、点击确认符合移动端习惯 9、TTS 播放状态一体化 9、HIG 合规 10）
+3. 落选 B（输入框内状态 42·状态表达弱、依赖颜色变化色盲用户不可达）、C（底部操作栏扩展 38·composer 过于复杂、状态栏占用额外空间）已在 `sketches/voice-interaction/` 留档
+4. 与 iOS HIG 一致：所有可点击区域 ≥ 44×44pt（mic 按钮、发送按钮、朗读按钮、待发送徽章）
+
+**实施规格**：
+- **录音覆盖层**：`position: absolute; bottom: 70px; left: 20px; right: 20px;`，圆角 14px，内边距 16px 20px
+- **波形动画**：5 个 bar，宽 3px，间距 3px，高度 12/20/16/24/14px，动画 0.4s ease-in-out infinite，延迟 0/0.1/0.2/0.1/0.3s
+- **计时器**：`font-family: "JetBrains Mono"`，14px，颜色 `#8D8880`
+- **待发送徽章**：`position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);`，圆角 999px，内边距 6px 12px，字重 600
+- **TTS 播放状态**：朗读按钮默认 `#8D8880`，播放时 `#B23A28` + icon 动画（可选）
+
+**风险与预案**：
+- **覆盖层可能遮挡消息**：覆盖层 bottom: 70px，composer 高度约 60px，实际遮挡 10px 以内——录音通常 <5 秒，用户注意力在录音而非阅读，可接受
+- **待发送徽章可能误触**：徽章高度 28px（6×2 + 16px 字高），宽度约 120px，点击区域足够；误触发送无负面后果（可撤回/重新录制）
+- **TTS 自动播放可能打扰**：保留开关（header 右上角），默认开启，用户可关闭；关闭后仅手动点击朗读按钮播放
 
 ## HIG 触控热区规则（Do's 补充）
 

@@ -1,6 +1,7 @@
 /* app.js —— 路由 + Tab 切换框架
  * hash 路由：#home / #vocab / #conversation / #grammar / #profile
- * 各页面模块（home.js/vocab.js/...）通过 window.App.pages.<route>.render(container) 渲染内容
+ * 支持子路由（如 #conversation/scene/cafe-order），Tab 高亮按第一段匹配。
+ * 各页面模块（home.js/vocab.js/...）通过 window.App.pages.<route>.render(container, subPath) 渲染内容
  */
 (function () {
   var ROUTES = ['home', 'vocab', 'conversation', 'grammar', 'profile'];
@@ -9,19 +10,25 @@
   var outlet = document.getElementById('page-outlet');
   var tabBar = document.getElementById('tab-bar');
 
-  function normalizeRoute(hash) {
-    var route = (hash || '').replace(/^#/, '');
-    return ROUTES.indexOf(route) !== -1 ? route : DEFAULT_ROUTE;
+  function parseHash(hash) {
+    var full = (hash || '').replace(/^#/, '');
+    var segments = full.split('/');
+    var base = segments[0];
+    if (ROUTES.indexOf(base) === -1) {
+      return { base: DEFAULT_ROUTE, sub: '', full: DEFAULT_ROUTE };
+    }
+    return { base: base, sub: segments.slice(1).join('/'), full: full };
   }
 
-  function renderRoute(route) {
-    var page = window.App && window.App.pages && window.App.pages[route];
+  function renderRoute(parsed) {
+    var page = window.App && window.App.pages && window.App.pages[parsed.base];
     if (page && typeof page.render === 'function') {
-      page.render(outlet);
+      page.render(outlet, parsed.sub);
     } else {
       outlet.innerHTML = '<div class="page"><h1 class="page-title">未找到页面</h1></div>';
     }
-    updateTabState(route);
+    updateTabState(parsed.base);
+    outlet.scrollTop = 0;
   }
 
   function updateTabState(route) {
@@ -36,14 +43,14 @@
   function navigate(route) {
     var target = '#' + route;
     if (window.location.hash === target) {
-      renderRoute(normalizeRoute(target));
+      renderRoute(parseHash(target));
     } else {
       window.location.hash = target;
     }
   }
 
   function onHashChange() {
-    renderRoute(normalizeRoute(window.location.hash));
+    renderRoute(parseHash(window.location.hash));
   }
 
   tabBar.addEventListener('click', function (e) {
@@ -53,6 +60,9 @@
   });
 
   window.addEventListener('hashchange', onHashChange);
+
+  window.App = window.App || {};
+  window.App.navigate = navigate;
 
   // 初始路由
   if (!window.location.hash) {

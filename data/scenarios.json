@@ -1,0 +1,142 @@
+[
+  {
+    "id": "cafe-order",
+    "icon": "☕",
+    "category": "travel",
+    "title": "咖啡店点单",
+    "settingZh": "你走进一家纽约街角的咖啡店，准备点一杯咖啡和一份早餐。店员会用英语接待你——试着自己完成点单、加需求、结账全过程。",
+    "goals": [
+      "开口点一杯饮品并说明尺寸/加料",
+      "追加一份食物",
+      "回应店员的追问（堂食/外带、姓名）",
+      "礼貌地结束对话并道谢"
+    ],
+    "opener": "Hi there, welcome in! What can I get started for you today?"
+  },
+  {
+    "id": "airport-customs",
+    "icon": "🛂",
+    "category": "travel",
+    "title": "机场过海关",
+    "settingZh": "你刚落地，正在排队过海关。海关官员会问你此行目的、停留时间、住处等问题——用简短清楚的英语回答即可，不用紧张。",
+    "goals": [
+      "说明来访目的（旅游/商务/探亲）",
+      "回答停留时长",
+      "说明住宿地点",
+      "应对一个追问"
+    ],
+    "opener": "Good afternoon. Passport, please. What's the purpose of your visit?"
+  },
+  {
+    "id": "hotel-checkin",
+    "icon": "🏨",
+    "category": "travel",
+    "title": "酒店办理入住",
+    "settingZh": "你到达酒店前台，需要办理入住手续，可能会被问到预订信息、房型偏好、是否需要加床等。",
+    "goals": [
+      "说出预订姓名/确认号",
+      "确认房型与入住天数",
+      "提出一个额外需求（如高层、无烟房）",
+      "询问早餐或退房时间"
+    ],
+    "opener": "Good evening, welcome to our hotel. Do you have a reservation with us?"
+  },
+  {
+    "id": "asking-directions",
+    "icon": "🧭",
+    "category": "travel",
+    "title": "向路人问路",
+    "settingZh": "你在陌生的街道上迷路了，需要向路人问路去最近的地铁站或某个地标。",
+    "goals": [
+      "礼貌地打断并提问",
+      "说清楚你要去的地方",
+      "听懂对方的方向指引并确认",
+      "道谢结束对话"
+    ],
+    "opener": "Sure, I can hear you have a question — where are you trying to go?"
+  },
+  {
+    "id": "small-talk-weather",
+    "icon": "💬",
+    "category": "daily",
+    "title": "和邻居闲聊天气",
+    "settingZh": "在电梯或小区里偶遇邻居，两人随口聊几句天气和周末计划——英语里最常见的破冰话题。",
+    "goals": [
+      "对天气发表看法",
+      "询问对方周末计划",
+      "分享一件自己的小事",
+      "自然地结束对话"
+    ],
+    "opener": "Morning! Can you believe this weather we're having?"
+  },
+  {
+    "id": "making-plans-friend",
+    "icon": "📅",
+    "category": "daily",
+    "title": "约朋友周末出行",
+    "settingZh": "你想约一位朋友周末一起吃饭或看电影，需要提议时间地点，并协调对方的档期。",
+    "goals": [
+      "主动发出邀约",
+      "提议具体时间和地点",
+      "回应对方的反建议",
+      "确认最终安排"
+    ],
+    "opener": "Hey! Long time no see. What have you been up to?"
+  },
+  {
+    "id": "express-feelings",
+    "icon": "🙂",
+    "category": "daily",
+    "title": "表达感受与情绪",
+    "settingZh": "朋友问起你最近过得怎么样，练习用英语描述情绪、原因，并简单安慰或回应对方。",
+    "goals": [
+      "描述自己最近的情绪状态",
+      "说明原因",
+      "回应对方的关心",
+      "反过来关心对方"
+    ],
+    "opener": "Hey, you seem a little quiet today. Is everything okay?"
+  },
+  {
+    "id": "work-meeting",
+    "icon": "💼",
+    "category": "work",
+    "title": "工作会议发言",
+    "settingZh": "在一个跨国团队的周会上，轮到你汇报本周的项目进度，并回答同事的一个追问。",
+    "goals": [
+      "简要汇报本周完成的工作",
+      "说明遇到的一个问题",
+      "提出下周计划",
+      "回答同事的追问"
+    ],
+    "opener": "Alright, let's move to updates. Could you walk us through your progress this week?"
+  },
+  {
+    "id": "work-email-call",
+    "icon": "📧",
+    "category": "work",
+    "title": "电话沟通邮件跟进",
+    "settingZh": "客户没有回复你的邮件，你需要打电话礼貌地跟进，确认对方是否收到并了解下一步。",
+    "goals": [
+      "礼貌地说明来电目的",
+      "确认对方是否收到邮件",
+      "询问下一步安排",
+      "礼貌结束通话"
+    ],
+    "opener": "Hello, this is calling from your vendor team — do you have a quick minute?"
+  },
+  {
+    "id": "work-interview",
+    "icon": "🗂️",
+    "category": "work",
+    "title": "工作场合自我介绍",
+    "settingZh": "新入职第一天，向同事们做一个简短的自我介绍，说明背景、角色和期待。",
+    "goals": [
+      "介绍姓名和职位",
+      "简述过往背景",
+      "说明将负责的工作",
+      "表达合作期待"
+    ],
+    "opener": "Everyone, let's welcome our new teammate — would you like to introduce yourself?"
+  }
+]

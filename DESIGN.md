@@ -117,6 +117,14 @@ typography:
     lineHeight: 1.4
     letterSpacing: "0em"
 
+  # 英文小段落（14px · 用于评估段落卡等"多段并列展示"场景，比 english-body 略小）
+  english-body-s:
+    fontFamily: "Source Serif 4"
+    fontSize: 14px
+    fontWeight: 500
+    lineHeight: 1.5
+    letterSpacing: "0em"
+
   # 元数据/技术标签（等宽小字，报刊感）
   meta:
     fontFamily: "JetBrains Mono, ui-monospace, Menlo, monospace"
@@ -324,6 +332,33 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.full}"
     size: 40px
+
+  # ============ 目录卡（catalog row）· 评估/表单式选择的主组件 ============
+  # 横向长条 min-height 52px，上下 1px rule；选中态：paper-alt 背景 + primary 文字 + 圆点/方勾填充
+  choice-row:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-m}"
+    padding: 12px
+  choice-row-selected:
+    backgroundColor: "{colors.paper-alt}"
+    textColor: "{colors.primary}"
+    typography: "{typography.body-m}"
+    padding: 12px
+
+  # ============ 段落卡（R4 输出能力自评专用） ============
+  # 三段梯度英文文本让用户"选一段最像自己能说出来的水平"，替代自由写作输入
+  # 选中态：paper-alt 背景 + 左侧 2px primary 竖引（呼应 bubble-tutor 中文批注红竖线）
+  choice-paragraph:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.english-body-s}"
+    padding: 14px
+  choice-paragraph-selected:
+    backgroundColor: "{colors.paper-alt}"
+    textColor: "{colors.ink}"
+    typography: "{typography.english-body-s}"
+    padding: 14px
 ---
 
 ## Overview
@@ -433,6 +468,16 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 
 **语言学习助手同样沿用**赤拔在艺术手册 t_a312968d 定稿的**左上 40×40 胶囊 + 20px 左箭头**返回按钮范式。iOS 系统级返回全是左箭头（不是 X）——语言学习助手全站也是 push 栈，无 modal sheet 页。所有二级页面（对话详情、语法详情、词条详情）统一用此。
 
+### 评估选择组件（choice-row / choice-paragraph / chip-row）
+
+**评估初始化流程全程零文字输入**——所有环节改为选择（t_b06616d2 决策）。三种组件按信息形态区分：
+
+- **`choice-row`（目录卡）**：横向长条 min-height 52px + 上下 1px rule + 右侧圆点（单选）或方勾（多选）。选中态：`paper-alt` 底 + `primary` 文字 + 圆点/方勾填充。视觉与词条卡片、语法列表同源，是评估最主用的选择组件。R1 学习经历/目标场景、R2 阅读理解，都用它。
+- **`chip-row`（横排等宽 4-chip）**：短标签（如时长选择 5/15/30/60 min）等宽横排，min-height 60px，字体走等宽 `JetBrains Mono` 13px（数据感）。选中态 `ink` 底 + `paper` 字。用于 3-4 个短并列选项。
+- **`choice-paragraph`（段落卡）**：R4 输出能力自评专用。三段梯度英文自我介绍（Basic / Intermediate / Advanced），让用户"选一段最像你现在能说出来的水平"。选中态：`paper-alt` 底 + **左侧 2px `primary` 竖引**（呼应 bubble-tutor 中文批注红竖线视觉语言）。**保留英文文本作为评估证据**，代替原写作 textarea——去除输入门槛的同时不丢失"输出能力"的评估信号。
+
+**触控**：所有选择控件 min-height ≥ 52px（目录卡）/ 60px（chip）/ ≥72px（段落卡），满足 iOS HIG ≥44pt。选中态用**填充色 + 文字加粗双通道**，不依赖 hover。
+
 ## Do's and Don'ts
 
 ### Do
@@ -455,6 +500,18 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 - **hover 不作为唯一状态载体**——赤拔只用 iPhone，触屏没有 hover，激活态用 `:active` 和填充色变化。
 
 ## Decision Log
+
+### 2026-09-10 · t_b06616d2 · 评估初始化改为全选择交互
+**决策**：水平评估五轮流程**去除所有文字输入**（原 R1 三个 text input、R4 写作 textarea），全部改为选择卡片。新增 `choice-row`（目录卡）+ `chip-row`（横排等宽 chip）+ `choice-paragraph`（段落卡）三个 component tokens。R4 写作样本改为**"三段英文自我介绍选一段最像你能说出来的水平"**——保留英文文本作为评估信号，代替开放输入。
+
+**依据**：
+1. 赤拔原话："初始化的时候，不要让用户填写，都变成选择"——移动端打字体验差、开放输入让评估结果不稳。
+2. 三案自评 47/38/36——**A 目录卡胜**（DESIGN.md 编辑室对齐 10、与"跟老师聊几句"的对话感一致 9）。落选 B（chip 网格 · 多邻国 tile 感 + session-hero-dark 超用量）、C（李克特量表 · 专业问卷感、失去对话性）已在 `sketches/assess-choice/` 留档。
+3. R4 段落卡替代写作 = 最聪明的信度保留方案——B 完全不暴露英文、C 变问卷，只有 A 保留了"英文文本作为证据"（AI 判分时同时看用户选的等级 + 那段文本本身，本地兜底也可用等级映射）。
+
+**风险与预案**：
+- **评估信度可能下降**：写作是"你能说出什么"，段落自评是"你觉得你能说出什么"——后者带自陈偏差。**对策**：R4 段落卡文字选择做梯度足够明显的三档（10 词 / 25 词 / 45 词，简单句 → 复合句 → 完成体+插入语），让用户凭直觉选；AI 评分同时把三段原文注入 prompt，评分依据保留"用户选的那段的实际语言复杂度"。
+- **R1 目标场景多选可能全勾**：用户想都要。**对策**：验收无强制上限（信度不因勾多下降，多勾 = "偏 general purpose"），本地评分只用 `goalsBreadth` 加小权重（5 分/100）避免主导。
 
 ### 2026-09-10 · t_51de6008 · 视觉与导航框架首建
 **决策**：整体视觉走 **A 案 Newsprint 编辑室**（米白纸底 + Source Serif 4 衬线 + 书签红），从 B 案吸收 **Session hero 深墨绿容器** + **古铜金作为长期成就色**，从 C 案吸收 **checkbox 打勾 accent 填充** + **1.7px 图标 stroke** + **词库搜索栏 pattern**。

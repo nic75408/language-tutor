@@ -1,6 +1,8 @@
 /* app.js —— 路由 + Tab 切换框架
  * hash 路由：#home / #vocab / #conversation / #grammar / #profile
- * 各页面模块（home.js/vocab.js/...）通过 window.App.pages.<route>.render(container) 渲染内容
+ * 支持二级详情路由：#grammar/<id>（如 #grammar/tense-present），用于知识点详情页深链。
+ * 各页面模块（home.js/vocab.js/...）通过 window.App.pages.<route>.render(container, param) 渲染内容，
+ * param 为二级路径的剩余部分（没有则为 null）。
  */
 (function () {
   var ROUTES = ['home', 'vocab', 'conversation', 'grammar', 'profile'];
@@ -9,19 +11,23 @@
   var outlet = document.getElementById('page-outlet');
   var tabBar = document.getElementById('tab-bar');
 
-  function normalizeRoute(hash) {
-    var route = (hash || '').replace(/^#/, '');
-    return ROUTES.indexOf(route) !== -1 ? route : DEFAULT_ROUTE;
+  function parseHash(hash) {
+    var raw = (hash || '').replace(/^#/, '');
+    var slashIdx = raw.indexOf('/');
+    var routePart = slashIdx === -1 ? raw : raw.substring(0, slashIdx);
+    var route = ROUTES.indexOf(routePart) !== -1 ? routePart : DEFAULT_ROUTE;
+    var param = slashIdx === -1 ? null : decodeURIComponent(raw.substring(slashIdx + 1));
+    return { route: route, param: param };
   }
 
-  function renderRoute(route) {
-    var page = window.App && window.App.pages && window.App.pages[route];
+  function renderRoute(parsed) {
+    var page = window.App && window.App.pages && window.App.pages[parsed.route];
     if (page && typeof page.render === 'function') {
-      page.render(outlet);
+      page.render(outlet, parsed.param);
     } else {
       outlet.innerHTML = '<div class="page"><h1 class="page-title">未找到页面</h1></div>';
     }
-    updateTabState(route);
+    updateTabState(parsed.route);
   }
 
   function updateTabState(route) {
@@ -33,17 +39,17 @@
     });
   }
 
-  function navigate(route) {
-    var target = '#' + route;
+  function navigate(route, param) {
+    var target = '#' + route + (param ? '/' + encodeURIComponent(param) : '');
     if (window.location.hash === target) {
-      renderRoute(normalizeRoute(target));
+      renderRoute(parseHash(target));
     } else {
       window.location.hash = target;
     }
   }
 
   function onHashChange() {
-    renderRoute(normalizeRoute(window.location.hash));
+    renderRoute(parseHash(window.location.hash));
   }
 
   tabBar.addEventListener('click', function (e) {
@@ -69,4 +75,8 @@
       });
     });
   }
+
+  window.App = window.App || {};
+  // 供各页面模块内部跳转使用，如详情页返回、卡片间联动跳转
+  window.App.navigateTo = navigate;
 })();

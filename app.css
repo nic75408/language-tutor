@@ -119,6 +119,254 @@ body {
   color: var(--color-primary);
 }
 
+/* ==========================================================================
+   语法讲堂模块 —— 沿用 DESIGN.md token（书签红/米白纸感/衬线标题）
+   独立前缀 --gr-* 避免影响其它仍在用占位样式的页面模块
+   ========================================================================== */
+.page[data-page="grammar"],
+.page[data-page="grammar-detail"] {
+  --gr-paper: #F7F3EC;
+  --gr-paper-alt: #EEE8DD;
+  --gr-ink: #1C1B18;
+  --gr-ink-2: #5B5750;
+  --gr-ink-3: #8D8880;
+  --gr-primary: #B23A28;
+  --gr-primary-soft: #F6E4DE;
+  --gr-success: #4A6B3C;
+  --gr-success-soft: #E4EADF;
+  --gr-warning: #6B5218;
+  --gr-warning-soft: #EFE7D2;
+  --gr-rule: rgba(28,27,24,0.09);
+  --gr-serif: "Source Serif 4", Georgia, serif;
+  --gr-sans: Inter, -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+}
+
+.grammar-header-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--gr-paper);
+  border: 1px solid var(--gr-rule);
+  color: var(--gr-ink);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.grammar-header-back:active {
+  background: var(--gr-paper-alt);
+}
+
+.grammar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grammar-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--gr-paper);
+  border: 1px solid var(--gr-rule);
+  border-radius: 4px;
+  padding: 16px 18px;
+  font-family: var(--gr-sans);
+  cursor: pointer;
+}
+
+.grammar-card:active {
+  background: var(--gr-paper-alt);
+}
+
+.grammar-card-title {
+  font-family: var(--gr-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gr-ink);
+  margin: 0 0 4px;
+}
+
+.grammar-card-summary {
+  font-size: 13px;
+  color: var(--gr-ink-2);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.grammar-badge {
+  display: inline-block;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.grammar-badge.basic {
+  background: var(--gr-success-soft);
+  color: var(--gr-success);
+}
+
+.grammar-badge.advanced {
+  background: var(--gr-warning-soft);
+  color: var(--gr-warning);
+}
+
+.grammar-detail-title {
+  font-family: var(--gr-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gr-ink);
+  margin: 0 0 12px;
+}
+
+.grammar-section {
+  margin-bottom: 24px;
+}
+
+.grammar-section-label {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--gr-ink-3);
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+.grammar-rule {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gr-ink);
+}
+
+.grammar-rule em {
+  color: var(--gr-primary);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.grammar-example {
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.grammar-example.correct {
+  background: var(--gr-success-soft);
+}
+
+.grammar-example.incorrect {
+  background: var(--gr-primary-soft);
+}
+
+.grammar-example-en {
+  font-family: var(--gr-serif);
+  font-size: 15px;
+  color: var(--gr-ink);
+  margin-bottom: 2px;
+}
+
+.grammar-example-zh {
+  color: var(--gr-ink-2);
+  font-size: 13px;
+}
+
+.grammar-example-mark {
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.grammar-example.correct .grammar-example-mark { color: var(--gr-success); }
+.grammar-example.incorrect .grammar-example-mark { color: var(--gr-primary); }
+
+.grammar-example-why {
+  color: var(--gr-ink-2);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.grammar-example-right {
+  color: var(--gr-success);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.grammar-quiz {
+  background: var(--gr-paper-alt);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.grammar-quiz-question {
+  font-size: 14px;
+  color: var(--gr-ink);
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.grammar-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grammar-quiz-option {
+  text-align: left;
+  background: var(--gr-paper);
+  border: 1px solid var(--gr-rule);
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--gr-ink);
+  cursor: pointer;
+  font-family: var(--gr-sans);
+}
+
+.grammar-quiz-option:disabled {
+  cursor: default;
+}
+
+.grammar-quiz-option.picked-correct {
+  background: var(--gr-success-soft);
+  border-color: var(--gr-success);
+  color: var(--gr-success);
+}
+
+.grammar-quiz-option.picked-wrong {
+  background: var(--gr-primary-soft);
+  border-color: var(--gr-primary);
+  color: var(--gr-primary);
+}
+
+.grammar-quiz-option.reveal-correct {
+  border-color: var(--gr-success);
+}
+
+.grammar-quiz-feedback {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--gr-ink-2);
+}
+
+.grammar-quiz-feedback.is-correct {
+  color: var(--gr-success);
+}
+
+.grammar-quiz-feedback.is-wrong {
+  color: var(--gr-primary);
+}
+
 /* 离线降级页 */
 .offline-page {
   display: flex;

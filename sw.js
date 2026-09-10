@@ -14,6 +14,7 @@ const APP_SHELL = [
   './js/home.js',
   './js/vocab.js',
   './js/conversation.js',
+  './js/grammar-data.js',
   './js/grammar.js',
   './js/profile.js',
   './icons/icon-192.png',

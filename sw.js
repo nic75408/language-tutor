@@ -1,7 +1,7 @@
 /* sw.js —— Service Worker 基础离线缓存
  * 策略：安装时预缓存 app shell；离线时 fallback 到 offline.html
  */
-const CACHE_APP = 'lang-tutor-app-v1';
+const CACHE_APP = 'lang-tutor-app-v2';
 
 const APP_SHELL = [
   './',
@@ -9,6 +9,7 @@ const APP_SHELL = [
   './app.css',
   './manifest.webmanifest',
   './offline.html',
+  './data/vocab-data.js',
   './js/app.js',
   './js/home.js',
   './js/vocab.js',

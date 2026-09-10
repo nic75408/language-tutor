@@ -1,0 +1,154 @@
+/* ==========================================================================
+   语言学习助手 — 全局样式（骨架阶段占位，等设计卡出 DESIGN.md 后对齐细节）
+   ========================================================================== */
+
+:root {
+  --color-primary: #3b82f6;
+  --color-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+  --tab-bar-height: 56px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.page-outlet {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: calc(16px + var(--safe-top)) 16px calc(var(--tab-bar-height) + 24px);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 页面切换动效：淡入，避免白屏闪烁 */
+.page {
+  animation: page-fade-in 0.18s ease-out;
+}
+
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+
+.page-placeholder {
+  margin-top: 40vh;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.page-placeholder .emoji {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.page-placeholder .coming-soon {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* 底部 Tab Bar */
+.tab-bar {
+  flex: 0 0 auto;
+  display: flex;
+  height: var(--tab-bar-height);
+  padding-bottom: var(--safe-bottom);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.tab-item {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.tab-item .tab-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.tab-item.active {
+  color: var(--color-primary);
+}
+
+/* 离线降级页 */
+.offline-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  height: 100dvh;
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.offline-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.offline-hint {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.offline-retry {
+  margin-top: 20px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}

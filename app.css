@@ -618,3 +618,275 @@ body {
 .vocab-review-btn.easy {
   background: #10b981;
 }
+
+/* ==========================================================================
+   水平评估模块（DESIGN.md tokens：paper #F7F3EC / ink #1C1B18 / primary #B23A28）
+   ========================================================================== */
+
+.assess-page {
+  --assess-paper: #F7F3EC;
+  --assess-paper-alt: #EEE8DD;
+  --assess-ink: #1C1B18;
+  --assess-ink-2: #5B5750;
+  --assess-ink-3: #8D8880;
+  --assess-primary: #B23A28;
+  --assess-primary-soft: #F6E4DE;
+  --assess-success: #4A6B3C;
+  --assess-success-soft: #E4EADF;
+  --assess-rule: rgba(28,27,24,0.09);
+  color: var(--assess-ink);
+}
+
+.assess-progress {
+  height: 4px;
+  background: var(--assess-rule);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.assess-progress-bar {
+  height: 100%;
+  background: var(--assess-primary);
+  transition: width 0.2s ease-out;
+}
+
+.assess-progress-label {
+  font-size: 12px;
+  color: var(--assess-ink-3);
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+}
+
+.assess-tutor-msg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.assess-tutor-avatar {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--assess-paper-alt);
+  color: var(--assess-ink);
+  font-family: "Source Serif 4", serif;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.assess-tutor-text {
+  font-family: "Source Serif 4", serif;
+  font-size: 16px;
+  line-height: 1.4;
+  padding-top: 4px;
+}
+
+.assess-passage,
+.assess-scenario {
+  background: var(--assess-paper-alt);
+  border-radius: 10px;
+  padding: 16px;
+  font-family: "Source Serif 4", serif;
+  font-size: 15px;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.assess-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assess-label {
+  font-size: 13px;
+  color: var(--assess-ink-2);
+  margin-top: 4px;
+}
+
+.assess-input,
+.assess-textarea {
+  font-family: inherit;
+  font-size: 15px;
+  padding: 12px 14px;
+  border: 1px solid var(--assess-rule);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--assess-ink);
+}
+
+.assess-textarea {
+  font-family: "Source Serif 4", serif;
+  resize: vertical;
+}
+
+.assess-question {
+  border-top: 1px solid var(--assess-rule);
+  padding-top: 12px;
+}
+
+.assess-q-text {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.assess-radio {
+  display: block;
+  font-size: 14px;
+  padding: 6px 0;
+  color: var(--assess-ink-2);
+}
+
+.assess-vocab-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.assess-chip-check {
+  font-family: "Source Serif 4", serif;
+  font-size: 14px;
+  padding: 6px 12px;
+  border: 1px solid var(--assess-rule);
+  border-radius: 999px;
+  color: var(--assess-ink-2);
+}
+
+.assess-btn-primary,
+.assess-btn-secondary {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 14px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.assess-btn-primary {
+  background: var(--assess-ink);
+  color: var(--assess-paper);
+}
+
+.assess-btn-secondary {
+  background: var(--assess-paper);
+  color: var(--assess-ink);
+  border: 1px solid var(--assess-rule);
+}
+
+.assess-loading {
+  color: var(--assess-ink-3);
+  font-size: 14px;
+}
+
+.assess-result {
+  text-align: left;
+}
+
+.assess-result-level-label {
+  font-size: 13px;
+  color: var(--assess-ink-2);
+}
+
+.assess-result-level {
+  font-family: "Source Serif 4", serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--assess-primary);
+  margin: 4px 0 20px;
+}
+
+.assess-result-section {
+  margin-bottom: 16px;
+}
+
+.assess-result-section h3 {
+  font-size: 14px;
+  margin: 0 0 6px;
+  color: var(--assess-ink-2);
+}
+
+.assess-result-section ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.assess-result-strength {
+  color: var(--assess-success);
+}
+
+.assess-result-weakness {
+  color: var(--assess-primary);
+}
+
+/* ==========================================================================
+   首页 onboarding banner + 我-页 等级卡（沿用评估模块 token）
+   ========================================================================== */
+
+.home-onboard-banner {
+  background: #F6E4DE;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.home-onboard-text {
+  font-size: 15px;
+  color: #1C1B18;
+  margin: 0 0 12px;
+}
+
+.home-level-card,
+.profile-level-card {
+  background: #EEE8DD;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 16px;
+  color: #1C1B18;
+}
+
+.profile-level-label {
+  font-size: 13px;
+  color: #5B5750;
+}
+
+.profile-level-value {
+  font-family: "Source Serif 4", serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #B23A28;
+  margin: 4px 0 16px;
+}
+
+.profile-level-section {
+  margin-bottom: 12px;
+}
+
+.profile-level-section h3 {
+  font-size: 13px;
+  margin: 0 0 4px;
+  color: #5B5750;
+}
+
+.profile-level-section ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+/* 全屏页面（评估流程）不显示 Tab Bar */
+.app--fullscreen .page-outlet {
+  padding-bottom: calc(16px + var(--safe-top));
+}

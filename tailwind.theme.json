@@ -1,0 +1,205 @@
+{
+  "theme": {
+    "extend": {
+      "colors": {
+        "paper": "#f7f3ec",
+        "paper-alt": "#eee8dd",
+        "surface": "#ffffff",
+        "surface-deep": "#253830",
+        "ink": "#1c1b18",
+        "ink-2": "#5b5750",
+        "ink-3": "#8d8880",
+        "ink-on-deep": "#ede7d5",
+        "primary": "#b23a28",
+        "primary-soft": "#f6e4de",
+        "success": "#4a6b3c",
+        "success-soft": "#e4eadf",
+        "warning": "#6b5218",
+        "warning-soft": "#efe7d2",
+        "gold": "#6b5122",
+        "gold-soft": "#eae0c7",
+        "rule": "#1c1b1817",
+        "rule-strong": "#1c1b182e",
+        "rule-on-deep": "#ede7d52e"
+      },
+      "fontFamily": {
+        "display-l": [
+          "Source Serif 4"
+        ],
+        "display-m": [
+          "Source Serif 4"
+        ],
+        "headline-l": [
+          "Source Serif 4"
+        ],
+        "headline-m": [
+          "Source Serif 4"
+        ],
+        "brand-mark": [
+          "Source Serif 4"
+        ],
+        "body-l": [
+          "Inter, -apple-system, PingFang SC, Noto Sans SC, sans-serif"
+        ],
+        "body-m": [
+          "Inter, -apple-system, PingFang SC, Noto Sans SC, sans-serif"
+        ],
+        "body-s": [
+          "Inter, -apple-system, PingFang SC, Noto Sans SC, sans-serif"
+        ],
+        "ui-l": [
+          "Inter, -apple-system, PingFang SC, sans-serif"
+        ],
+        "ui-m": [
+          "Inter, -apple-system, PingFang SC, sans-serif"
+        ],
+        "ui-s": [
+          "Inter, -apple-system, PingFang SC, sans-serif"
+        ],
+        "tab-label": [
+          "Inter, -apple-system, PingFang SC, sans-serif"
+        ],
+        "english-body": [
+          "Source Serif 4"
+        ],
+        "meta": [
+          "JetBrains Mono, ui-monospace, Menlo, monospace"
+        ],
+        "kicker": [
+          "JetBrains Mono, ui-monospace, Menlo, monospace"
+        ],
+        "ipa": [
+          "JetBrains Mono, ui-monospace, Menlo, monospace"
+        ]
+      },
+      "fontSize": {
+        "display-l": [
+          "34px",
+          {
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "display-m": [
+          "28px",
+          {
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "headline-l": [
+          "22px",
+          {
+            "letterSpacing": "-0.005em",
+            "fontWeight": "700"
+          }
+        ],
+        "headline-m": [
+          "18px",
+          {
+            "fontWeight": "600"
+          }
+        ],
+        "brand-mark": [
+          "22px",
+          {
+            "letterSpacing": "-0.005em",
+            "fontWeight": "700"
+          }
+        ],
+        "body-l": [
+          "16px",
+          {
+            "fontWeight": "400"
+          }
+        ],
+        "body-m": [
+          "14px",
+          {
+            "fontWeight": "400"
+          }
+        ],
+        "body-s": [
+          "13px",
+          {
+            "fontWeight": "400"
+          }
+        ],
+        "ui-l": [
+          "15px",
+          {
+            "letterSpacing": "-0.005em",
+            "fontWeight": "600"
+          }
+        ],
+        "ui-m": [
+          "14px",
+          {
+            "fontWeight": "500"
+          }
+        ],
+        "ui-s": [
+          "12px",
+          {
+            "fontWeight": "500"
+          }
+        ],
+        "tab-label": [
+          "10px",
+          {
+            "letterSpacing": "0.02em",
+            "fontWeight": "500"
+          }
+        ],
+        "english-body": [
+          "16px",
+          {
+            "letterSpacing": "0em",
+            "fontWeight": "500"
+          }
+        ],
+        "meta": [
+          "11px",
+          {
+            "letterSpacing": "0.05em",
+            "fontWeight": "400"
+          }
+        ],
+        "kicker": [
+          "10px",
+          {
+            "letterSpacing": "0.12em",
+            "fontWeight": "500"
+          }
+        ],
+        "ipa": [
+          "11px",
+          {
+            "fontWeight": "400"
+          }
+        ]
+      },
+      "borderRadius": {
+        "none": "0px",
+        "xs": "2px",
+        "sm": "4px",
+        "md": "10px",
+        "lg": "14px",
+        "xl": "20px",
+        "full": "999px"
+      },
+      "spacing": {
+        "0": "0px",
+        "1": "4px",
+        "2": "8px",
+        "3": "12px",
+        "4": "16px",
+        "5": "20px",
+        "6": "24px",
+        "8": "32px",
+        "10": "40px",
+        "12": "48px"
+      }
+    }
+  }
+}

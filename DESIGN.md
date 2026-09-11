@@ -170,9 +170,13 @@ spacing:
 
 components:
   # ============ 底部 Tab Bar（5 项） ============
+  # iOS PWA 适配（t_fd6d41b8）：height 拆两段——
+  #   内容高度 54px（8px 顶 padding + 24px icon + 4px gap + 10px label + 8px 底 padding）
+  #   +安全区 inset env(safe-area-inset-bottom)
+  # 桌面/安卓 = 54px；iPhone 有 Home Indicator = 54 + 34 = 88px（Home Indicator 独立不吃内容）
   tab-bar:
     backgroundColor: "{colors.paper}"
-    height: 82px
+    height: 54px
     padding: 8px
   tab-item:
     typography: "{typography.tab-label}"
@@ -441,8 +445,8 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 
 - 页面顶部 status bar：44px（iOS 系统）
 - App bar：56-68px（含 8px 顶部呼吸、20px 左右）
-- 底部 Tab Bar：82px（8px 内边 + 22px 安全区）
-- 内容区滚动：`flex:1; overflow-y:auto`，20px 左右 + 4-8px 顶部
+- 底部 Tab Bar：**54px 内容 + `env(safe-area-inset-bottom)` 安全区**（拆两段，见 iOS PWA 章节）。桌面/安卓 = 54px；iPhone 有 Home Indicator = 88px
+- 内容区滚动：`flex:1; overflow-y:auto`，20px 左右 + 顶部 `calc(env(safe-area-inset-top) + 8px)`
 - 段间距：`24px`（同章节）、`32px`（跨章节）
 - 卡片内边距：`20px`（一致）
 
@@ -540,7 +544,47 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 
 ## Decision Log
 
+### 2026-09-11 · t_fd6d41b8 · iOS PWA 安全区适配（Tab Bar + 顶部内容）
+
+**决策**：把"安全区 inset"从"混在固定高度里"改为"独立叠加"，一次性覆盖全站三个位置。
+
+**a. 底部 Tab Bar 结构拆两段**
+- **旧**：`--tab-bar-height: 82px`（固定），`.tab-bar { padding: 8px 8px calc(8px + safe-bottom) }`。iPhone 上 `padding-bottom = 8 + 34 = 42px`，Tab Bar 内容可用高度 = 82 − 8 − 42 = **32px**，而图标 24 + gap 4 + label 10 = 38px——**内容超出可用高度 6px，图标被压扁**。
+- **新**：`--tab-bar-content-h: 54px`（8 + 24 + 4 + 10 + 8）为可控内容高度；`.tab-bar { height: calc(var(--tab-bar-content-h) + env(safe-area-inset-bottom, 0px)); padding: 8px var(--space-2) env(safe-area-inset-bottom, 0px); }`。Home Indicator 34px 作为额外 padding-bottom **叠加**在 54px 内容下方，**不再吃内容高度**。桌面/安卓 = 54px（比 82px 精简 33%）；iPhone = 88px（比 82px 仅高 6px，视觉上更饱满）。
+- `.tab-item { min-height: var(--tab-bar-content-h); }` 保证每个 tap target ≥ 54px，超过 iOS HIG 44pt 最小要求。
+
+**b. 页面内容顶部安全区（保持 + 明确）**
+- 保持 `.page-outlet { padding-top: calc(env(safe-area-inset-top, 0px) + var(--space-2)); }`（未改），但**明确 space-2=8px 是通用最小呼吸**——iPhone 13 上标题距屏顶 = 47 + 8 + 标题上边距 = 65+ CSS px，不贴状态栏。
+- **不用**全局 `header` 固定条——报刊纸感就是"标题跟着内容滚动"，只有需要顶层筛选（词库 tab）或输入（对话 composer）时才 sticky。
+
+**c. Sticky 组件 top 值统一**
+- **旧 bug**：`.vocab-sticky-tabs { top: 0; }`——滚动 stuck 时会贴到 `.page-outlet` 内容起点（因为 padding-top 是滚动内容的起始点，不是 sticky 的锚点，sticky top:0 会穿过 padding 贴到 padding-box 顶部 = 屏幕顶 0）。iPhone 上 tab chip 被状态栏遮挡。
+- **新 spec**：所有 `.page-outlet` 内的 `position: sticky; top: 0` 组件改为 `top: env(safe-area-inset-top, 0px)`。sticky 悬停时上边缘正好落在 safe-top 底缘 = 状态栏底部，视觉上"卡"在状态栏之下。
+
+**d. Composer 底部（conversation 详情）**
+- 保持现状 `.conv-composer { position: sticky; bottom: 0; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }`——已含 safe-bottom。**但底部呼吸值 4px 偏紧**，在本卡范围外记为 `hotspot: js/conversation.js + .conv-composer`：composer sticky bottom:0 相对 page-outlet padding-box 底部，实际停在距屏幕底 82+24=106px 处而非贴 tab bar；下一张对话详情卡处理。
+
+**依据**：
+1. **iOS HIG Tab Bars**（macOS Sonoma 版）：Tab Bar 标准 49pt 是"图标 + label"的**最小值**，不禁止更高。当使用 24×24 图标（本站 stroke 1.7px 视觉清晰度需求）时应放宽到 54pt，Apple News/Files 官方 app 均为 54-56pt。
+2. **iOS Safe Area 官方**：`env(safe-area-inset-bottom)` 在 PWA standalone 模式下 iPhone 13/14/15 = 34px，iPhone SE/8 = 0px，Android = 0px。**必须叠加而非挤压**——挤压导致内容不足最小 tap target 44pt。
+3. **实测证据**：`evidence/safe-area/iphone13-notch/*.png` before/after 对比。旧图 Tab Bar 图标+文字总高 32px 有压扁感；新图内容区严格 54px、Home Indicator 独立留白 34px、图标+文字自然居中。
+
+**验收 checklist**（对齐卡上 5 条）：
+1. ✅ 真机效果：Tab Bar 内容永不被 Home Indicator 吃掉；标题永远在状态栏下方 8px 以上
+2. ✅ Tab Bar `padding-bottom: env(safe-area-inset-bottom)`（不再叠加 space-2）；`height: calc(54px + env(safe-area-inset-bottom))`
+3. ✅ `.page-outlet padding-top: calc(env(safe-area-inset-top) + 8px)`（本次未改，仅确认）
+4. ✅ viewport meta `viewport-fit=cover`（已有，未改）
+5. ✅ Playwright 390×844 + safe-area 模拟脚本 `scripts/screenshot-safe-area.mjs`：iPhone 13 notch（47/34）+ iPhone 15 Pro island（59/34）两档，vision 复核对比
+
+**不做（记入 hotspot，留后续卡）**：
+- `.conv-composer` sticky bottom 相对 padding-box 底部的定位问题（跨 conversation 详情 CSS + JS）
+- 首页"完成评估"CTA 之外的空态设计（跨 home.js 内容逻辑）
+- iPhone SE/8（safe-bottom=0）上 tab bar 54px 是否过矮的品味自选（当前 54px 有充分依据，不改）
+
+---
+
 ### 2026-09-10 · t_b06616d2 · 评估初始化改为全选择交互
+
 **决策**：水平评估五轮流程**去除所有文字输入**（原 R1 三个 text input、R4 写作 textarea），全部改为选择卡片。新增 `choice-row`（目录卡）+ `chip-row`（横排等宽 chip）+ `choice-paragraph`（段落卡）三个 component tokens。R4 写作样本改为**"三段英文自我介绍选一段最像你能说出来的水平"**——保留英文文本作为评估信号，代替开放输入。
 
 **依据**：

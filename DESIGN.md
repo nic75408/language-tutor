@@ -609,6 +609,62 @@ WCAG：`ink #1C1B18` on `paper #F7F3EC` ≈ 15.5:1，AAA。`primary #B23A28` on 
 - **待发送徽章可能误触**：徽章高度 28px（6×2 + 16px 字高），宽度约 120px，点击区域足够；误触发送无负面后果（可撤回/重新录制）
 - **TTS 自动播放可能打扰**：保留开关（header 右上角），默认开启，用户可关闭；关闭后仅手动点击朗读按钮播放
 
+### 2026-09-11 · t_c3407922 · 对话模块语音交互布局重叠修复
+
+**决策**：**方案 A（录音覆盖层 + 待发送徽章）判负**，改为**方案 B（Composer 就地形变）48/50 胜**。
+
+**赤拔判负原话**：「对话界面感觉非常不可用，都重叠了」（附截图，见 attachments/img_d58976f61193.jpg）
+
+**原方案第一性问题**：把「待发送」做成了独立悬浮徽章，与「录音覆盖层」在同一 z 层共存。状态本应互斥（录音中 → 识别 → 待发送 → 发送）却允许同时可见。截图里录音条 + 待发送徽章 + 输入框 + 发送按钮四层元素堆叠。此外 AI 消息顶到 iOS 状态栏——safe-area-inset-top 未在 PWA 全屏模式下保底。
+
+**本轮三案对齐轴**：状态如何被<b>独占地</b>表达（不是加不加 badge 这种表面选择）。所有方案共守：录音态与待发送态永不同框；待发送态用输入框自身形变承载不再另开胶囊；safe-area 顶部保底 44px。
+
+**三案自评 48/44/40**：
+- **A · iOS Sheet 半屏模态 44/50**：模态最清晰但遮挡消息历史 60%，与本站 push 栈无 modal 的 iOS HIG 决定（t_1bfbf0ed）冲突
+- **B · Composer 就地形变 48/50（胜）**：composer 单一容器承载 4 态（idle / recording / pending / sending），录音时输入框和 mic/send 按钮全部让位、composer 变身为深色卡片；识别完成后 composer 还原为普通高度，输入框内脉冲红点 + primary 边框 + 发送按钮变红呼吸。**零新增层，物理不可能重叠**
+- **C · Composer 上方推起波形 40/50**：波形层与 composer 分容器，需两套 CSS，动画容易闪，与 B 相比无明显收益
+
+落选 A 和 C 的方案 HTML 和打分理由留档于 `sketches/voice-interaction-v2/`（`compare.html` + `B-state-machine.html` 4 态完整规格）。
+
+**实施规格**（Composer 状态机）：
+
+| 状态 | class | Composer 高度 | Input 表现 | Btn.mic 表现 | Btn.send 表现 |
+|------|-------|--------------|-----------|-------------|--------------|
+| idle | (无) | 54 px, paper 底, border-top rule | surface 白底 + rule 边框 + placeholder | primary 红实心 | ink 深色, 灰化 disabled |
+| recording | `.is-recording` | 76 px, ink 黑底, border-top 无 | display:none | display:none | display:none |
+| pending | `.is-pending` | 54 px 还原 | primary-soft 粉底 + primary 2px 边框 + 内嵌 6px 脉冲红点 + 识别文字 | 弱化：transparent 底 + ink-3 字 + rule 边框轮廓 | primary 红底 + send-glow 1.5s 呼吸 |
+| sending | `.is-sending` | 54 px | 文字变 ink-3 淡 | 保持 primary | ink 底 + 12px spinner 旋转 |
+
+**recording 态内嵌元素**：
+- `.rec-waveform`：5 条 bar × 3px 宽，高 12/22/16/28/18px，`rec-wave 0.4s ease-in-out infinite`，delay 0/0.08/0.16/0.12/0.20s，颜色 primary
+- `.rec-label`：`font-serif` 13px 0.3px letter-spacing, paper 色, "正在听你说"
+- `.rec-timer`：`font-mono` 12px, rgba(paper, 0.72), 格式 `m:ss`
+- `.btn-rec-stop`：44 × 44 primary 圆按钮，中心 ■，`mic-pulse 1.2s` 呼吸
+- 上方 `.rec-cancel-hint`：composer 顶边上 8px，ink-3 11px "← 滑走取消"，仅 recording 态出现
+
+**pending 态承接**：
+- input 内左侧 6px `pending-dot`（primary 底，`pending-pulse 1.2s` 呼吸缩放）
+- 点 input 任意位置 = 移除 pending class（`input.focus` handler）→ 进入编辑
+- 点 mic 按钮 = 重新录音（覆盖 pending 内容）
+- **不再有独立徽章**
+
+**P2 修复**：`@media (display-mode: standalone), (display-mode: fullscreen)` 下，`.page-outlet` padding-top 保底 `max(--safe-top, 44px)`——解决 iOS PWA 里 safe-area-inset-top 值不稳定/为 0 时消息顶到状态栏。非 PWA 环境（Chrome 网页/DevTools 模拟）保持原有 `--space-2 + --safe-top` 行为。
+
+**依据**：
+1. 赤拔截图直证「重叠」不可用（img_d58976f61193.jpg）
+2. iOS HIG dictation 参考：iMessage 语音消息条同构（composer 就地变身，不叠层）
+3. 状态互斥的可测保证：Playwright 断言「录音中 input/mic/send 全部让位（`display:none`）」
+4. 品味档案（`品味档案 2026-09-10 t_70315a71`）已更新：**移动端「发送前确认」应由 composer 自身状态承载，不能靠额外悬浮层，两层同 z 必重叠**
+
+**验收依据**：
+- 4 条验收标准全通过（`scripts/voice-interaction.test.mjs` 18/18，3 次连跑无 flake）
+- `evidence/after/` 5 张截图（01-idle / 02-recording / 03-pending / 04-editing / 05-typed）逐张 vision_analyze 核对无重叠
+
+**风险与预案**：
+- **recording→pending 高度变化 76→54 时的视觉跳动**：`.conv-composer` 加 `transition: background 0.18s, padding 0.18s` 平滑过渡；用户视觉焦点在 composer 上，"从大变小"符合"收拢"预期，可接受
+- **pending 态三处红（红点 + 红边框 + 红发送按钮）视觉压力**：mic 按钮 pending 弱化为灰色轮廓，避免第四处红；三处红是一组关联视觉锚点（都指向"待发送"这一件事），不散乱
+- **Chromium getComputedStyle 时序缓存**：只影响测试断言，产品运行时无感知；测试用 `waitForFunction` 等 style propagate
+
 ## HIG 触控热区规则（Do's 补充）
 
 **核心**：所有可点击控件热区 ≥ 44 × 44pt，视觉尺寸可以更小。视觉是 DESIGN.md 的语言，触控是 HIG 硬底线。

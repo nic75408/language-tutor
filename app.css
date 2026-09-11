@@ -98,6 +98,16 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* iOS PWA 全屏模式：safe-top 保底 44px（notch）——避免消息顶到状态栏 · t_c3407922 P2 */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  #app {
+    --safe-top-min: 44px;
+  }
+  .page-outlet {
+    padding-top: calc(var(--space-2) + max(var(--safe-top), var(--safe-top-min)));
+  }
+}
+
 /* 页面切换动效：淡入，避免白屏闪烁 */
 .page {
   animation: page-fade-in 0.18s ease-out;
@@ -2113,21 +2123,7 @@ body {
   align-items: center;
   gap: 8px;
 }
-.conv-composer input[type="text"] {
-  flex: 1;
-  background: var(--color-surface);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-full);
-  padding: 10px 16px;
-  height: 44px; /* HIG · S2-2 tap target */
-  outline: none;
-}
-.conv-composer input[type="text"]::placeholder {
-  color: var(--color-ink-3);
-}
+/* 旧的 .conv-composer input[type="text"] 直选择器已废弃：input 现在在 .conv-input-wrap 内，样式在下方状态机段落 · t_c3407922 */
 .btn-send {
   width: 44px;
   height: 44px;
@@ -2156,6 +2152,7 @@ body {
   touch-action: manipulation;
 }
 .btn-mic.recording {
+  /* 保留：仅供 pending 态弱化时的过渡态兼容（当前状态机已由 .conv-composer.is-* 主导） */
   background: var(--color-ink);
   animation: mic-pulse 1s ease-in-out infinite;
 }
@@ -2171,92 +2168,211 @@ body {
   margin-top: 4px;
 }
 
-/* 待发送态：输入框高亮 · DESIGN.md pending-badge 关联样式 · t_70315a71 */
-.conv-composer.has-pending input[type="text"] {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
+/* ==========================================================================
+   Composer 状态机（idle / recording / pending / sending）· t_c3407922 · 定稿 B
+   —— 所有语音相关状态在 .conv-composer 单一容器内表达，永不重叠。
+   —— t_70315a71 的 .recording-overlay 与 .pending-badge 独立层已删除
+      （落选原因见 DESIGN.md 决策日志）。
+   ========================================================================== */
 
-/* ============ 录音覆盖层 · DESIGN.md recording-overlay · t_70315a71 ============ */
-.recording-overlay {
-  position: absolute;
-  bottom: 70px; /* composer 高度 ~60px + 10px 间距 */
-  left: 20px;
-  right: 20px;
-  background: rgba(28, 27, 24, 0.95); /* ink α0.95 */
-  border-radius: 14px;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 100;
+/* 2 · recording：composer 整体变身为深色录音卡（78px 高） */
+.conv-composer.is-recording {
+  background: var(--color-ink);
+  border-top: none;
+  padding: 14px var(--pad-page) calc(14px + var(--safe-bottom));
+  transition: background 0.18s ease, padding 0.18s ease;
 }
-.recording-waveform {
+.conv-composer .rec-inner {
+  display: none;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.conv-composer.is-recording .rec-inner { display: flex; }
+.conv-composer.is-recording .conv-input-wrap { display: none; }
+.conv-composer.is-recording input[type="text"] { display: none; }
+.conv-composer.is-recording .btn-mic { display: none; }
+.conv-composer.is-recording .btn-send { display: none; }
+
+.rec-waveform {
   display: flex;
   align-items: center;
   gap: 3px;
-  height: 24px;
+  height: 32px;
+  flex-shrink: 0;
 }
-.recording-waveform span {
+.rec-waveform span {
   width: 3px;
   background: var(--color-primary);
   border-radius: 2px;
-  animation: wave 0.4s ease-in-out infinite;
+  animation: rec-wave 0.4s ease-in-out infinite;
 }
-.recording-waveform span:nth-child(1) { height: 12px; animation-delay: 0s; }
-.recording-waveform span:nth-child(2) { height: 20px; animation-delay: 0.1s; }
-.recording-waveform span:nth-child(3) { height: 16px; animation-delay: 0.2s; }
-.recording-waveform span:nth-child(4) { height: 24px; animation-delay: 0.1s; }
-.recording-waveform span:nth-child(5) { height: 14px; animation-delay: 0.3s; }
-@keyframes wave {
+.rec-waveform span:nth-child(1) { height: 12px; animation-delay: 0s; }
+.rec-waveform span:nth-child(2) { height: 22px; animation-delay: 0.08s; }
+.rec-waveform span:nth-child(3) { height: 16px; animation-delay: 0.16s; }
+.rec-waveform span:nth-child(4) { height: 28px; animation-delay: 0.12s; }
+.rec-waveform span:nth-child(5) { height: 18px; animation-delay: 0.20s; }
+@keyframes rec-wave {
   0%, 100% { transform: scaleY(0.5); }
   50% { transform: scaleY(1); }
 }
-.recording-timer {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--color-ink-3);
-  min-width: 40px;
-  text-align: center;
-}
-.recording-text {
+.rec-label {
   flex: 1;
-  font-family: var(--font-sans);
-  font-size: 14px;
   color: var(--color-paper);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-/* ============ 待发送徽章 · DESIGN.md pending-badge · t_70315a71 ============ */
-.pending-badge {
-  position: absolute;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
+.rec-timer {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(247, 243, 236, 0.72);
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.btn-rec-stop {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
   background: var(--color-primary);
   color: var(--color-paper);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 999px;
+  border: none;
+  display: none; /* 仅录音态显示 */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+.conv-composer.is-recording .btn-rec-stop {
+  display: flex;
+}
+
+/* 3 · pending：composer 还原为普通高度；input 内 pulse dot + primary 边框；send 按钮变红呼吸 */
+/* 空段：pending 具体样式在下方 .conv-input-wrap 定义之后（避免 border 短语覆盖 border-color） */
+
+/* input 包裹层：承载 dot + input，pending 态时边框变红 */
+.conv-input-wrap {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-full);
+  padding: 0 14px;
+  height: 44px;
   display: flex;
   align-items: center;
   gap: 6px;
-  white-space: nowrap;
-  z-index: 100;
-  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.conv-input-wrap input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
   border: none;
-  /* HIG 合规：直接把热区做到 44px，不靠视觉小胶囊+::before 扩展 */
+  padding: 0;
+  outline: none;
   height: 44px;
-  padding: 10px 16px;
 }
-.pending-badge svg {
-  width: 14px;
-  height: 14px;
-  animation: clock-tick 1s ease-in-out infinite;
+.conv-input-wrap input[type="text"]::placeholder {
+  color: var(--color-ink-3);
 }
-@keyframes clock-tick {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
+.pending-dot {
+  display: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  flex-shrink: 0;
+  animation: pending-pulse 1.2s ease-in-out infinite;
+}
+@keyframes pending-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* Pending 态样式 —— 放在 .conv-input-wrap 之后，确保 border-color 不被短语覆盖 */
+.conv-composer.is-pending .conv-input-wrap {
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  border-width: 2px;
+  border-style: solid;
+}
+.conv-composer.is-pending .conv-input-wrap input[type="text"] {
+  color: var(--color-ink);
+  background: transparent;
+  border: none;
+  padding: 0;
+  height: 44px;
+}
+.conv-composer.is-pending .pending-dot {
+  display: inline-block;
+}
+.conv-composer.is-pending .btn-mic {
+  /* pending 态弱化麦克风：灰色轮廓，用户点它 = 重新录音 */
+  background: transparent;
+  color: var(--color-ink-3);
+  border: 1px solid var(--color-rule);
+}
+.conv-composer.is-pending .btn-send {
+  background: var(--color-primary);
+  animation: send-glow 1.5s ease-in-out infinite;
+}
+@keyframes send-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(178, 58, 40, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(178, 58, 40, 0); }
+}
+
+/* 4 · sending：发送按钮 spinner；input 文字变淡 */
+.conv-composer.is-sending .conv-input-wrap input[type="text"] {
+  color: var(--color-ink-3);
+}
+.conv-composer.is-sending .btn-send {
+  position: relative;
+  animation: none;
+}
+.conv-composer.is-sending .btn-send svg {
+  opacity: 0;
+}
+.conv-composer.is-sending .btn-send::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.32);
+  border-top-color: #fff;
+  border-radius: var(--radius-full);
+  animation: send-spin 0.8s linear infinite;
+}
+@keyframes send-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 取消录音提示（悬浮 composer 上方） */
+.rec-cancel-hint {
+  position: absolute;
+  bottom: calc(78px + var(--safe-bottom) + 8px); /* composer 高 + 8px 间距 */
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--color-ink-3);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 5;
+}
+.conv-chat.is-recording .rec-cancel-hint {
+  opacity: 1;
 }
 
 /* 对话回顾 */

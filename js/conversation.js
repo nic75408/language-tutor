@@ -182,16 +182,22 @@
         '<button class="btn-end-chat" data-action="end">结束对话</button>' +
         '</div></div>' +
         '<div class="conv-messages" id="conv-messages"></div>' +
-        '<div class="recording-overlay" id="conv-recording-overlay" hidden>' +
-        '<div class="recording-waveform"><span></span><span></span><span></span><span></span><span></span></div>' +
-        '<span class="recording-text">正在听你说...</span>' +
-        '<span class="recording-timer" id="conv-recording-timer">0:00</span>' +
-        '</div>' +
-        '<button class="pending-badge" id="conv-pending-badge" hidden>' + window.Icons.get('clock', { size: 14 }) + '<span>待发送 · 点击确认</span></button>' +
+        '<div class="rec-cancel-hint" id="conv-rec-hint">← 滑走取消</div>' +
         '<div class="conv-composer" id="conv-composer">' +
+        // idle / pending / sending 共用：input 包裹层 + 麦克风 + 发送
+        '<div class="conv-input-wrap">' +
+        '<span class="pending-dot" aria-hidden="true"></span>' +
         '<input type="text" id="conv-input" placeholder="用英语打字，或按住麦克风说话..." />' +
+        '</div>' +
         '<button class="btn-mic" id="conv-mic" title="按住说话" aria-label="按住说话">' + window.Icons.get('waveform', { size: 20 }) + '</button>' +
         '<button class="btn-send" id="conv-send" disabled aria-label="发送">' + window.Icons.get('chevron.right', { size: 18 }) + '</button>' +
+        // recording 态：内嵌 rec-inner + 停止按钮（display:none by default）
+        '<div class="rec-inner">' +
+        '<div class="rec-waveform"><span></span><span></span><span></span><span></span><span></span></div>' +
+        '<span class="rec-label">正在听你说</span>' +
+        '<span class="rec-timer" id="conv-rec-timer">0:00</span>' +
+        '</div>' +
+        '<button class="btn-rec-stop" id="conv-rec-stop" aria-label="停止录音">■</button>' +
         '</div>' +
         (window.Speech.isRecognitionSupported() ? '' : '<div class="mic-unsupported-hint">当前浏览器不支持语音识别，请用文字输入</div>') +
         '</div>';
@@ -211,34 +217,40 @@
       var input = body.querySelector('#conv-input');
       var sendBtn = body.querySelector('#conv-send');
       var composer = body.querySelector('#conv-composer');
-      var pendingBadge = body.querySelector('#conv-pending-badge');
-      var recordingOverlay = body.querySelector('#conv-recording-overlay');
-      var recordingTimerEl = body.querySelector('#conv-recording-timer');
-      var recordingTimerHandle = null;
+      var chatWrap = body.querySelector('.conv-chat');
+      var recTimerEl = body.querySelector('#conv-rec-timer');
+      var recStopBtn = body.querySelector('#conv-rec-stop');
+      var recTimerHandle = null;
 
-      function hidePendingBadge() {
-        pendingBadge.hidden = true;
-        composer.classList.remove('has-pending');
+      // 状态互斥切换：任意时刻 composer 只处于一个态
+      function setComposerState(state) {
+        composer.classList.remove('is-recording', 'is-pending', 'is-sending');
+        chatWrap.classList.remove('is-recording');
+        if (state === 'recording') {
+          composer.classList.add('is-recording');
+          chatWrap.classList.add('is-recording');
+        } else if (state === 'pending') {
+          composer.classList.add('is-pending');
+        } else if (state === 'sending') {
+          composer.classList.add('is-sending');
+        }
       }
-      function showPendingBadge() {
-        pendingBadge.hidden = false;
-        composer.classList.add('has-pending');
+      function clearPending() {
+        composer.classList.remove('is-pending');
       }
-      pendingBadge.addEventListener('click', function () {
-        // 徽章仅作"待确认"视觉提示，点击只是确认/收起，真正发送仍需点发送按钮
-        hidePendingBadge();
-      });
 
+      // 点输入框任意位置 = 进入编辑（脱离 pending 态，dot 消失）
+      input.addEventListener('focus', clearPending);
       input.addEventListener('input', function () {
         sendBtn.disabled = input.value.trim().length === 0;
-        hidePendingBadge();
+        clearPending();
       });
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !sendBtn.disabled) {
           submitUserText(input.value.trim());
           input.value = '';
           sendBtn.disabled = true;
-          hidePendingBadge();
+          clearPending();
         }
       });
       sendBtn.addEventListener('click', function () {
@@ -246,25 +258,25 @@
         submitUserText(input.value.trim());
         input.value = '';
         sendBtn.disabled = true;
-        hidePendingBadge();
+        clearPending();
       });
 
       var micBtn = body.querySelector('#conv-mic');
 
       function startTimer() {
         var startedAt = Date.now();
-        recordingTimerEl.textContent = '0:00';
-        recordingTimerHandle = setInterval(function () {
+        recTimerEl.textContent = '0:00';
+        recTimerHandle = setInterval(function () {
           var elapsed = Math.floor((Date.now() - startedAt) / 1000);
           var m = Math.floor(elapsed / 60);
           var s = elapsed % 60;
-          recordingTimerEl.textContent = m + ':' + String(s).padStart(2, '0');
+          recTimerEl.textContent = m + ':' + String(s).padStart(2, '0');
         }, 200);
       }
       function stopTimer() {
-        if (recordingTimerHandle) {
-          clearInterval(recordingTimerHandle);
-          recordingTimerHandle = null;
+        if (recTimerHandle) {
+          clearInterval(recTimerHandle);
+          recTimerHandle = null;
         }
       }
 
@@ -274,30 +286,29 @@
           alert('当前浏览器不支持语音识别，请使用 Chrome/Safari 最新版，或改用文字输入。');
           return;
         }
-        micBtn.classList.add('recording');
-        recordingOverlay.hidden = false;
-        hidePendingBadge();
+        setComposerState('recording');
         startTimer();
         recognitionCtrl = window.Speech.startRecognition({
           onResult: function (text) {
-            micBtn.classList.remove('recording');
-            recordingOverlay.hidden = true;
             stopTimer();
             if (text) {
               input.value = text;
               sendBtn.disabled = false;
-              showPendingBadge();
+              setComposerState('pending');
+            } else {
+              setComposerState('idle');
             }
           },
           onError: function () {
-            micBtn.classList.remove('recording');
-            recordingOverlay.hidden = true;
             stopTimer();
+            setComposerState('idle');
           },
           onEnd: function () {
-            micBtn.classList.remove('recording');
-            recordingOverlay.hidden = true;
             stopTimer();
+            // 若结果已回填走 pending，onEnd 不覆盖；否则回 idle
+            if (!composer.classList.contains('is-pending')) {
+              setComposerState('idle');
+            }
           }
         });
       };
@@ -309,6 +320,11 @@
       micBtn.addEventListener('mouseup', stopMic);
       micBtn.addEventListener('touchend', stopMic);
       micBtn.addEventListener('mouseleave', stopMic);
+
+      // 录音态显式停止按钮（点击 = 松开麦克风）
+      recStopBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      recStopBtn.addEventListener('click', stopMic);
+      recStopBtn.addEventListener('touchend', function (e) { e.preventDefault(); stopMic(); });
     }
 
     function renderMessages() {

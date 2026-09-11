@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+import path from 'path';
+const OUT = decodeURIComponent(new URL('.', import.meta.url).pathname);
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1400, height: 700 }, deviceScaleFactor: 2 });
+await page.goto('file://' + path.join(OUT, 'B-state-machine.html'), { waitUntil: 'networkidle' });
+await page.waitForTimeout(400);
+await page.screenshot({ path: path.join(OUT, 'B-state-machine.png'), fullPage: true });
+await browser.close();
+console.log('done');

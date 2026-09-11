@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>B 案完整状态机 · 4 态并排</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --paper: #F7F3EC; --paper-alt: #EFE7D2;
+    --ink: #1C1B18; --ink-2: #504A40; --ink-3: #8D8880;
+    --primary: #B23A28; --primary-soft: #F3E1DC;
+    --rule: #E5DDCC; --surface: #FDFBF7;
+  }
+  body {
+    font-family: -apple-system, "Inter", "PingFang SC", sans-serif;
+    background: #1C1B18; color: #F7F3EC;
+    padding: 40px 20px 80px;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: #8D8880; font-size: 13px; margin-bottom: 32px; }
+
+  .row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 20px; max-width: 1400px; margin: 0 auto;
+  }
+  .col {
+    background: #F7F3EC; color: #1C1B18;
+    border-radius: 10px; padding: 16px;
+  }
+  .col-title {
+    font-size: 14px; font-weight: 700;
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .col-title .tag {
+    font-family: SF Mono, Menlo, monospace;
+    font-size: 10px; color: #6B5218; background: #EFE7D2;
+    padding: 2px 6px; border-radius: 2px;
+  }
+  .col-desc { font-size: 11px; color: var(--ink-3); margin-bottom: 12px; line-height: 1.5; height: 44px; }
+
+  /* Composer local preview (放大版) */
+  .composer {
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 8px;
+    border-radius: 8px;
+    height: 60px;
+  }
+  .input {
+    flex: 1; height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0 14px;
+    font-size: 12px; color: var(--ink-3);
+    display: flex; align-items: center; gap: 6px;
+    overflow: hidden;
+  }
+  .btn {
+    width: 40px; height: 40px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #fff; flex-shrink: 0;
+  }
+  .btn.mic { background: var(--primary); }
+  .btn.send { background: var(--ink); }
+  .btn.send.disabled { background: #B0A896; }
+
+  /* Recording variant */
+  .composer.rec {
+    background: var(--ink);
+    height: 80px;
+    padding: 14px 12px;
+    border-top: none;
+  }
+  .composer.rec .rec-inner {
+    flex: 1;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .wave {
+    display: flex; align-items: center; gap: 3px;
+    height: 30px; flex-shrink: 0;
+  }
+  .wave span {
+    width: 3px; background: var(--primary); border-radius: 2px;
+    animation: w 0.4s ease-in-out infinite;
+  }
+  .wave span:nth-child(1) { height: 12px; animation-delay: 0s; }
+  .wave span:nth-child(2) { height: 22px; animation-delay: 0.08s; }
+  .wave span:nth-child(3) { height: 16px; animation-delay: 0.16s; }
+  .wave span:nth-child(4) { height: 28px; animation-delay: 0.12s; }
+  .wave span:nth-child(5) { height: 18px; animation-delay: 0.20s; }
+  @keyframes w { 0%,100%{transform:scaleY(0.5);} 50%{transform:scaleY(1);} }
+  .rec-label {
+    flex: 1; color: var(--paper);
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 13px;
+  }
+  .rec-timer {
+    font-family: SF Mono, Menlo, monospace;
+    font-size: 12px; color: rgba(247,243,236,0.7);
+    margin-right: 6px;
+  }
+  .btn.stop { background: var(--primary); }
+
+  /* Pending variant */
+  .composer.pending .input {
+    background: var(--primary-soft);
+    border: 1.5px solid var(--primary);
+    color: var(--ink);
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--primary);
+    animation: p 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes p { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(0.7);} }
+  .composer.pending .btn.send {
+    background: var(--primary);
+    animation: g 1.5s ease-in-out infinite;
+  }
+  @keyframes g {
+    0%,100%{box-shadow:0 0 0 0 rgba(178,58,40,.35);}
+    50%{box-shadow:0 0 0 6px rgba(178,58,40,0);}
+  }
+
+  /* Sending variant */
+  .composer.sending .input { color: var(--ink-3); }
+  .composer.sending .btn.send {
+    background: var(--ink);
+    position: relative;
+  }
+  .composer.sending .btn.send::after {
+    content: '';
+    position: absolute; inset: 4px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 999px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .spec {
+    margin-top: 12px;
+    font-size: 11px;
+    font-family: SF Mono, Menlo, monospace;
+    color: var(--ink-2);
+    line-height: 1.7;
+  }
+  .spec b { color: var(--ink); font-weight: 700; }
+  .spec .k { color: var(--ink-3); }
+  .transition {
+    margin-top: 8px; padding: 6px 8px;
+    background: var(--paper-alt); border-radius: 3px;
+    font-size: 10px; color: var(--ink-2);
+    font-family: SF Mono, Menlo, monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1>B 案 · 完整状态机（4 态）</h1>
+<div class="sub">t_c3407922 · 所有态在 composer 单一容器内表达 · 从不叠加</div>
+
+<div class="row">
+
+  <!-- IDLE -->
+  <div class="col">
+    <div class="col-title">1 · idle <span class="tag">初始</span></div>
+    <div class="col-desc">默认态：占位符文字、麦克风红、发送按钮灰。用户可打字或按住麦克风。</div>
+    <div class="composer">
+      <div class="input">用英语打字，或按住麦克风说话...</div>
+      <div class="btn mic">🎙</div>
+      <div class="btn send disabled">›</div>
+    </div>
+    <div class="spec">
+      <b>Composer</b><br>
+      <span class="k">height</span> 54 px<br>
+      <span class="k">bg</span> paper<br>
+      <span class="k">border-top</span> 1 px rule<br>
+      <b>Input</b><br>
+      <span class="k">bg</span> surface<br>
+      <span class="k">border</span> 1 px rule<br>
+      <span class="k">color</span> ink-3 (placeholder)<br>
+      <b>Btn.send</b><br>
+      <span class="k">bg</span> ink<br>
+      <span class="k">opacity</span> 0.4 (disabled)
+    </div>
+    <div class="transition">→ 按住麦克风：进入 recording</div>
+  </div>
+
+  <!-- RECORDING -->
+  <div class="col">
+    <div class="col-title">2 · recording <span class="tag">录音中</span></div>
+    <div class="col-desc">Composer 整体变身：深色 ink 底、波形 + label + 计时器 + 停止按钮。麦克风消失，输入框消失。</div>
+    <div class="composer rec">
+      <div class="rec-inner">
+        <div class="wave"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="rec-label">正在听你说</div>
+        <div class="rec-timer">0:03</div>
+      </div>
+      <div class="btn stop">■</div>
+    </div>
+    <div class="spec">
+      <b>Composer.rec</b><br>
+      <span class="k">height</span> 76 px（+22）<br>
+      <span class="k">bg</span> ink<br>
+      <span class="k">transition</span> 180 ms<br>
+      <b>Waveform</b><br>
+      <span class="k">bars</span> 5 · 3 px 宽<br>
+      <span class="k">height</span> 12-28 px<br>
+      <span class="k">color</span> primary<br>
+      <b>Btn.stop</b><br>
+      <span class="k">bg</span> primary<br>
+      <span class="k">icon</span> square 14 px
+    </div>
+    <div class="transition">→ 松开 / 点停止：进入 pending</div>
+  </div>
+
+  <!-- PENDING -->
+  <div class="col">
+    <div class="col-title">3 · pending <span class="tag">待发送</span></div>
+    <div class="col-desc">Composer 还原为普通高度。输入框变浅粉底 + 红边框 + 脉冲红点 + 识别文字。发送按钮变红呼吸。<b>无独立徽章。</b></div>
+    <div class="composer pending">
+      <div class="input"><span class="dot"></span>I would like to order a coffee...</div>
+      <div class="btn mic">🎙</div>
+      <div class="btn send">›</div>
+    </div>
+    <div class="spec">
+      <b>Composer</b><br>
+      <span class="k">height</span> 54 px（还原）<br>
+      <b>Input.pending</b><br>
+      <span class="k">bg</span> primary-soft<br>
+      <span class="k">border</span> 1.5 px primary<br>
+      <span class="k">color</span> ink<br>
+      <b>Dot</b><br>
+      <span class="k">size</span> 6 px 圆<br>
+      <span class="k">bg</span> primary<br>
+      <span class="k">anim</span> 1.2 s 呼吸<br>
+      <b>Btn.send</b><br>
+      <span class="k">bg</span> primary<br>
+      <span class="k">glow</span> box-shadow 1.5 s
+    </div>
+    <div class="transition">→ 点发送 = sending / 点输入 = idle(edit)</div>
+  </div>
+
+  <!-- SENDING -->
+  <div class="col">
+    <div class="col-title">4 · sending <span class="tag">发送中</span></div>
+    <div class="col-desc">发送按钮显示 spinner，输入框内文字变灰。用户视觉即时反馈"消息已提交"。</div>
+    <div class="composer sending">
+      <div class="input">I would like to order a coffee...</div>
+      <div class="btn mic">🎙</div>
+      <div class="btn send"></div>
+    </div>
+    <div class="spec">
+      <b>Composer</b><br>
+      <span class="k">height</span> 54 px<br>
+      <b>Input</b><br>
+      <span class="k">bg</span> surface<br>
+      <span class="k">color</span> ink-3 (提交中)<br>
+      <b>Btn.send</b><br>
+      <span class="k">bg</span> ink<br>
+      <span class="k">spinner</span> 20 px<br>
+      <span class="k">anim</span> 0.8 s 旋转<br>
+      <b>Duration</b><br>
+      <span class="k">min-show</span> 300 ms<br>
+      <span class="k">then</span> reset to idle
+    </div>
+    <div class="transition">→ 完成：清空 input，回到 idle</div>
+  </div>
+
+</div>
+
+<div style="max-width: 1400px; margin: 32px auto 0; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 8px; color: #F7F3EC; font-size: 13px; line-height: 1.7;">
+  <b style="color:#E8C572;">关键不变量</b>：整个流程只有一个 composer 容器；任何时刻它只处于四态之一；四态互斥、由单一 CSS class 切换（idle / rec / pending / sending）。<b>永远不会出现两个语音相关的视觉元素同时可见。</b><br>
+  <br>
+  <b>取消录音</b>：录音态时，用户可将手指从麦克风按钮"滑走"离开按钮范围（touchmove），或点击 composer 上方浮现的"← 滑走取消"提示。取消 = 直接回 idle，无 pending 态。<br>
+  <b>点输入框编辑</b>：pending 态时用户点输入框任意位置 → 移除 pending class，dot 消失，边框还原为 rule，用户可编辑文字。<br>
+  <b>iOS HIG 合规</b>：麦克风按钮和停止按钮位置一致（同一 x 坐标），只切颜色和图标——用户"按住 / 松开"的手感一致。热区 40×40（视觉）+ 44px 内边距 padding 保证 44 tap target。<br>
+  <b>safe-area</b>：composer padding-bottom 已含 `env(safe-area-inset-bottom)`；顶部消息区继承 page-outlet 的 safe-top。
+</div>
+
+</body>
+</html>

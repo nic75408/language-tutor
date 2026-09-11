@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>对话语音交互 v2 三方案 · t_c3407922</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --paper: #F7F3EC;
+    --paper-alt: #EFE7D2;
+    --ink: #1C1B18;
+    --ink-2: #504A40;
+    --ink-3: #8D8880;
+    --primary: #B23A28;
+    --primary-soft: #F3E1DC;
+    --rule: #E5DDCC;
+    --surface: #FDFBF7;
+    --gold: #8C6D3F;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", sans-serif;
+    background: #1C1B18;
+    color: #F7F3EC;
+    padding: 40px 20px 80px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 26px; margin-bottom: 6px; font-weight: 700; letter-spacing: -0.5px; }
+  .subtitle { color: #8D8880; font-size: 13px; margin-bottom: 8px; }
+  .brief {
+    background: rgba(178, 58, 40, 0.14);
+    color: #F7F3EC;
+    border-left: 3px solid var(--primary);
+    padding: 12px 16px;
+    font-size: 13px;
+    margin: 24px 0 40px;
+    max-width: 1200px;
+  }
+  .brief b { color: #F7F3EC; }
+  .brief .prev { color: #F0A090; font-family: SF Mono, Menlo, monospace; font-size: 12px; }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .variant {
+    background: #F7F3EC;
+    color: #1C1B18;
+    border-radius: 10px;
+    padding: 20px 20px 24px;
+  }
+  .variant.win { outline: 3px solid #E8C572; outline-offset: -3px; }
+  .variant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .variant-title { font-size: 16px; font-weight: 700; }
+  .variant-score {
+    font-size: 11px; font-weight: 600;
+    color: #6B5218; background: #EFE7D2;
+    padding: 3px 8px; border-radius: 3px;
+    font-family: SF Mono, Menlo, monospace;
+  }
+  .variant.win .variant-score { background: #E8C572; color: #3E2A00; }
+  .variant-tag { font-size: 12px; color: var(--ink-3); margin-bottom: 16px; }
+
+  /* Phone frame */
+  .phone {
+    width: 340px;
+    height: 736px;
+    background: var(--paper);
+    border-radius: 36px;
+    border: 7px solid #1C1B18;
+    overflow: hidden;
+    position: relative;
+    margin: 12px auto 0;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  }
+  .notch {
+    width: 130px; height: 26px;
+    background: #1C1B18;
+    position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0 0 14px 14px;
+    z-index: 100;
+  }
+  .statusbar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 22px 0;
+    font-size: 12px; font-weight: 600; color: var(--ink);
+    z-index: 90;
+    /* iOS black-translucent 模式下透明；这里用轻米白暗示 safe-area 已让开 */
+  }
+  .statusbar .time { font-family: SF Mono, Menlo, monospace; }
+  .statusbar .right { display: flex; gap: 4px; font-size: 11px; }
+
+  .screen {
+    position: absolute; inset: 0;
+    padding: 44px 0 0; /* safe-area-top ≈ 44px */
+    display: flex; flex-direction: column;
+  }
+
+  /* Chat page */
+  .chat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px 6px;
+    gap: 8px;
+  }
+  .back-btn {
+    width: 34px; height: 34px;
+    border-radius: 999px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--ink);
+  }
+  .chat-title {
+    flex: 1;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 15px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+    padding-left: 4px;
+  }
+  .chat-title .dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--primary);
+  }
+  .header-actions { display: flex; gap: 6px; align-items: center; }
+  .speaker-btn {
+    width: 34px; height: 34px; border-radius: 999px;
+    background: var(--paper); border: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--ink-2);
+  }
+  .end-btn {
+    font-size: 11px; font-weight: 600; color: var(--primary);
+    background: var(--primary-soft); border-radius: 999px;
+    padding: 5px 10px;
+  }
+
+  .messages {
+    flex: 1;
+    padding: 12px 16px;
+    overflow: hidden;
+  }
+  .msg-tutor {
+    display: flex; align-items: flex-start; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .avatar {
+    width: 20px; height: 20px; border-radius: 999px;
+    background: var(--paper-alt); color: var(--primary);
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .msg-tutor .txt {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 14px; line-height: 1.45; color: var(--ink);
+  }
+  .msg-tutor .speak {
+    font-size: 11px; color: var(--ink-3);
+    margin: 6px 0 0 28px;
+    display: flex; align-items: center; gap: 3px;
+  }
+
+  /* Composer base */
+  .composer {
+    position: absolute; left: 0; right: 0;
+    bottom: 50px; /* 上方留 tabbar */
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    padding: 8px 16px calc(8px + 6px);
+    display: flex; align-items: center; gap: 8px;
+    z-index: 20;
+  }
+  .input {
+    flex: 1; height: 38px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0 14px;
+    font-size: 12px; color: var(--ink-3);
+    display: flex; align-items: center;
+  }
+  .btn-round {
+    width: 38px; height: 38px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #fff;
+    flex-shrink: 0;
+  }
+  .btn-mic { background: var(--primary); }
+  .btn-mic.rec { background: var(--ink); animation: pulse 1.2s ease-in-out infinite; }
+  .btn-send { background: var(--ink); }
+  .btn-send.disabled { background: #B0A896; }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(178,58,40,.35); }
+    50% { box-shadow: 0 0 0 6px rgba(178,58,40,0); }
+  }
+
+  .tabbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 50px;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    display: flex; justify-content: space-around; align-items: center;
+    padding-bottom: 4px;
+    font-size: 9px; color: var(--ink-3);
+    z-index: 15;
+  }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tab.active { color: var(--primary); }
+  .tab-icon {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  /* ---------- Variant A: Full-height sheet ---------- */
+  .A .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 62%;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 24px 24px 0 0;
+    padding: 20px 24px calc(24px + 6px);
+    display: flex; flex-direction: column;
+    align-items: center;
+    z-index: 40;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.35);
+  }
+  .sheet-handle {
+    width: 40px; height: 5px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+  .sheet-label {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    color: var(--paper);
+    margin-bottom: 32px;
+    opacity: 0.85;
+  }
+  .waveform-big {
+    display: flex; align-items: center; gap: 5px;
+    height: 100px;
+    margin-bottom: 24px;
+  }
+  .waveform-big span {
+    width: 5px;
+    background: var(--primary);
+    border-radius: 3px;
+    animation: waveBig 0.5s ease-in-out infinite;
+  }
+  .waveform-big span:nth-child(1) { height: 22px; animation-delay: 0s; }
+  .waveform-big span:nth-child(2) { height: 48px; animation-delay: 0.06s; }
+  .waveform-big span:nth-child(3) { height: 72px; animation-delay: 0.12s; }
+  .waveform-big span:nth-child(4) { height: 92px; animation-delay: 0.18s; }
+  .waveform-big span:nth-child(5) { height: 60px; animation-delay: 0.24s; }
+  .waveform-big span:nth-child(6) { height: 38px; animation-delay: 0.20s; }
+  .waveform-big span:nth-child(7) { height: 78px; animation-delay: 0.14s; }
+  .waveform-big span:nth-child(8) { height: 30px; animation-delay: 0.08s; }
+  .waveform-big span:nth-child(9) { height: 55px; animation-delay: 0.02s; }
+  @keyframes waveBig {
+    0%,100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+  .sheet-timer {
+    font-family: SF Mono, Menlo, monospace;
+    font-size: 20px;
+    color: var(--paper);
+    opacity: 0.9;
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+  }
+  .sheet-actions {
+    display: flex; gap: 24px; align-items: center;
+    margin-top: auto;
+  }
+  .sheet-cancel, .sheet-confirm {
+    width: 56px; height: 56px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .sheet-cancel { background: rgba(255,255,255,0.12); color: var(--paper); }
+  .sheet-confirm { background: var(--primary); color: var(--paper); }
+  .sheet-hint {
+    font-size: 11px; color: var(--paper); opacity: 0.5;
+    margin-top: 12px;
+  }
+  .A .backdrop {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.32);
+    z-index: 30;
+  }
+
+  /* Pending state (shared display in composer input) */
+  .composer.pending .input {
+    background: var(--primary-soft);
+    border: 1.5px solid var(--primary);
+    color: var(--ink);
+    display: flex; align-items: center; gap: 6px;
+    padding-left: 10px;
+  }
+  .composer.pending .input .pending-dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--primary);
+    animation: dotPulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes dotPulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+  .composer.pending .input .pending-text {
+    color: var(--ink);
+    font-size: 12px;
+    flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .composer.pending .btn-send { background: var(--primary); animation: sendGlow 1.5s ease-in-out infinite; }
+  @keyframes sendGlow {
+    0%,100% { box-shadow: 0 0 0 0 rgba(178,58,40,.35); }
+    50% { box-shadow: 0 0 0 6px rgba(178,58,40,0); }
+  }
+
+  /* ---------- Variant B: In-place composer morph ---------- */
+  .B .composer.rec {
+    background: var(--ink);
+    border-top: none;
+    padding: 12px 16px calc(12px + 6px);
+    height: 76px;
+    align-items: center;
+  }
+  .B .composer.rec .rec-inner {
+    flex: 1;
+    display: flex; align-items: center; gap: 10px;
+    background: transparent;
+    height: 100%;
+  }
+  .B .waveform-mid {
+    display: flex; align-items: center; gap: 3px;
+    height: 32px; flex-shrink: 0;
+  }
+  .B .waveform-mid span {
+    width: 3px; background: var(--primary); border-radius: 2px;
+    animation: waveMid 0.4s ease-in-out infinite;
+  }
+  .B .waveform-mid span:nth-child(1) { height: 14px; animation-delay: 0s; }
+  .B .waveform-mid span:nth-child(2) { height: 24px; animation-delay: 0.08s; }
+  .B .waveform-mid span:nth-child(3) { height: 18px; animation-delay: 0.16s; }
+  .B .waveform-mid span:nth-child(4) { height: 30px; animation-delay: 0.12s; }
+  .B .waveform-mid span:nth-child(5) { height: 20px; animation-delay: 0.20s; }
+  @keyframes waveMid {
+    0%,100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1); }
+  }
+  .B .rec-label {
+    flex: 1;
+    color: var(--paper);
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+  .B .rec-timer {
+    font-family: SF Mono, Menlo, monospace;
+    font-size: 12px; color: var(--ink-3); color: rgba(247,243,236,0.7);
+    margin-right: 8px;
+  }
+  .B .btn-stop {
+    background: var(--primary); color: var(--paper);
+  }
+  .B .rec-hint {
+    position: absolute; bottom: 128px; left: 0; right: 0;
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 11px;
+    z-index: 10;
+  }
+
+  /* ---------- Variant C: Push-up wave ---------- */
+  .C .push-wave {
+    position: absolute; left: 0; right: 0;
+    bottom: 50px; /* 就在原 composer 位置上 */
+    background: var(--ink);
+    color: var(--paper);
+    padding: 18px 20px 20px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 10px;
+    z-index: 25;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+  .C .push-label-row {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%;
+  }
+  .C .push-label {
+    flex: 1;
+    color: var(--paper);
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 14px;
+  }
+  .C .push-timer {
+    font-family: SF Mono, Menlo, monospace;
+    font-size: 13px; color: rgba(247,243,236,0.75);
+  }
+  .C .push-cancel {
+    color: var(--primary);
+    font-size: 12px; font-weight: 600;
+    padding: 4px 10px;
+    border: 1px solid var(--primary);
+    border-radius: 999px;
+  }
+  .C .push-waveform {
+    display: flex; align-items: center; gap: 4px;
+    height: 44px; margin-top: 4px;
+    width: 100%;
+    justify-content: center;
+  }
+  .C .push-waveform span {
+    width: 4px; background: var(--primary); border-radius: 2px;
+    animation: wavePush 0.45s ease-in-out infinite;
+  }
+  .C .push-waveform span:nth-child(1) { height: 18px; animation-delay: 0s; }
+  .C .push-waveform span:nth-child(2) { height: 32px; animation-delay: 0.06s; }
+  .C .push-waveform span:nth-child(3) { height: 24px; animation-delay: 0.12s; }
+  .C .push-waveform span:nth-child(4) { height: 40px; animation-delay: 0.18s; }
+  .C .push-waveform span:nth-child(5) { height: 30px; animation-delay: 0.14s; }
+  .C .push-waveform span:nth-child(6) { height: 22px; animation-delay: 0.08s; }
+  .C .push-waveform span:nth-child(7) { height: 36px; animation-delay: 0.02s; }
+  .C .push-waveform span:nth-child(8) { height: 26px; animation-delay: 0.10s; }
+  .C .push-waveform span:nth-child(9) { height: 42px; animation-delay: 0.16s; }
+  .C .push-waveform span:nth-child(10) { height: 20px; animation-delay: 0.20s; }
+  @keyframes wavePush {
+    0%,100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+  /* 输入框在录音时被隐藏（push-wave 完全替代其位置） */
+  .C .composer.rec { display: none; }
+
+  /* ---------- state labels ---------- */
+  .state-row {
+    display: flex; gap: 10px;
+    justify-content: center;
+    margin-top: 14px;
+    font-size: 10px;
+    color: var(--ink-3);
+    text-align: center;
+  }
+  .state-row .state {
+    padding: 4px 10px;
+    background: var(--paper-alt);
+    color: var(--ink-2);
+    border-radius: 3px;
+    font-family: SF Mono, Menlo, monospace;
+    font-weight: 600;
+  }
+  .state-row .state.on {
+    background: var(--ink); color: var(--paper);
+  }
+
+  .analysis {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--rule);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .analysis b { color: var(--ink); }
+  .analysis .pros { color: #2d5738; }
+  .analysis .cons { color: #8B2E1F; }
+  .metric-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 12px;
+    font-size: 11px;
+    font-family: SF Mono, Menlo, monospace;
+    margin-top: 10px;
+  }
+  .metric-row .k { color: var(--ink-3); }
+  .metric-row .v { color: var(--ink); font-weight: 600; }
+
+  /* Scoring table */
+  .scoring {
+    max-width: 1400px;
+    margin: 40px auto 0;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 24px;
+    color: #F7F3EC;
+  }
+  .scoring h2 { font-size: 18px; margin-bottom: 14px; }
+  .scoring table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .scoring th, .scoring td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .scoring th { color: #8D8880; font-weight: 600; font-size: 12px; }
+  .scoring td.n { text-align: center; font-family: SF Mono, Menlo, monospace; }
+  .scoring tr.total td { font-weight: 700; border-top: 2px solid rgba(255,255,255,0.18); border-bottom: none; }
+  .scoring tr.total td.n { font-size: 15px; color: #E8C572; }
+  .scoring tr.win td.n { color: #E8C572; }
+  .scoring .note { color: #B0A896; font-size: 11px; margin-top: 12px; line-height: 1.6; }
+  .picked { color: #E8C572; font-weight: 700; }
+
+</style>
+</head>
+<body>
+
+<h1>对话语音交互 v2 · 三方案</h1>
+<div class="subtitle">t_c3407922 · 修复 t_70315a71 的重叠/杂乱 · 三案自决</div>
+
+<div class="brief">
+  <b>上一版失败的第一性原理</b>：把「待发送」做成了独立悬浮徽章，与「录音覆盖层」在同一 z 层共存 → 状态本应互斥却允许同框，视觉重叠。
+  <b>本轮三案对齐轴</b>：状态如何被<b>独占地</b>表达（不是加不加 badge）。所有方案共守：① 录音态、待发送态<b>永不同框</b>；② 待发送态用输入框<b>自身形变</b>承载，不再另开胶囊；③ safe-area-inset-top 生效。
+  <div class="prev">t_70315a71 判负 · 落选记录已入 DESIGN.md 决策日志</div>
+</div>
+
+<div class="row">
+
+  <!-- =============== VARIANT A =============== -->
+  <div class="variant A">
+    <div class="variant-header">
+      <div class="variant-title">A · iOS Sheet 半屏模态</div>
+      <div class="variant-score">44/50</div>
+    </div>
+    <div class="variant-tag">系统级：录音进入 62% 高 sheet，输入区完全让出 · 参考 iMessage / SceneKit dictation</div>
+
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span class="time">11:57</span>
+        <span class="right">•••• 5G 63%</span>
+      </div>
+      <div class="screen">
+        <div class="chat-header">
+          <div class="back-btn">‹</div>
+          <div class="chat-title"><span class="dot"></span>自由对话</div>
+          <div class="header-actions">
+            <div class="speaker-btn">🔊</div>
+            <div class="end-btn">结束</div>
+          </div>
+        </div>
+        <div class="messages">
+          <div class="msg-tutor">
+            <div class="avatar">T</div>
+            <div>
+              <div class="txt">Hi there, welcome in! What can I get started for you today?</div>
+              <div class="speak">🔊 朗读</div>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="input">用英语打字，或按住麦克风说话...</div>
+          <div class="btn-round btn-mic">🎙</div>
+          <div class="btn-round btn-send disabled">›</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><div class="tab-icon">🏠</div>首页</div>
+          <div class="tab"><div class="tab-icon">📖</div>词库</div>
+          <div class="tab active"><div class="tab-icon">💬</div>对话</div>
+          <div class="tab"><div class="tab-icon">📝</div>语法</div>
+          <div class="tab"><div class="tab-icon">👤</div>我</div>
+        </div>
+
+        <!-- Sheet overlay -->
+        <div class="backdrop"></div>
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-label">正 在 听 你 说</div>
+          <div class="waveform-big">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="sheet-timer">0:03</div>
+          <div class="sheet-actions">
+            <div class="sheet-cancel">✕</div>
+            <div class="sheet-confirm">✓</div>
+          </div>
+          <div class="sheet-hint">✓ 完成 · ✕ 取消</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="state-row">
+      <div class="state">idle</div>
+      <div class="state on">recording</div>
+      <div class="state">pending</div>
+      <div class="state">sending</div>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">✓ 状态最重、模态最清晰，绝对不会与 composer 重叠</div>
+      <div class="pros">✓ 波形 100px 高、计时器 20px，识别时全部注意力聚焦</div>
+      <div class="pros">✓ ✓/✕ 双按钮清晰交互终点，符合 iOS dictation HIG</div>
+      <div class="cons">✗ 用户中断成本高：sheet 遮挡了消息历史，读不到 AI 上一句</div>
+      <div class="cons">✗ 与产品「随聊」轻量语气冲突，仪式感偏重</div>
+      <div class="cons">✗ push 栈里再套 modal，与 t_1bfbf0ed HIG 审查「本站全 push 无 modal」精神冲突</div>
+      <div class="metric-row">
+        <span class="k">状态占屏</span><span class="v">62% (523 / 844)</span>
+        <span class="k">z-layer</span><span class="v">30 backdrop / 40 sheet</span>
+        <span class="k">HIG 匹配</span><span class="v">iMessage dictation</span>
+        <span class="k">消息可见性</span><span class="v">被 sheet 遮 60%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== VARIANT B =============== -->
+  <div class="variant B win">
+    <div class="variant-header">
+      <div class="variant-title">B · Composer 就地形变</div>
+      <div class="variant-score">48/50</div>
+    </div>
+    <div class="variant-tag">输入框本身变身为深色录音卡，无任何额外层 · 参考 iMessage 语音消息、WhatsApp voice memo</div>
+
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span class="time">11:57</span>
+        <span class="right">•••• 5G 63%</span>
+      </div>
+      <div class="screen">
+        <div class="chat-header">
+          <div class="back-btn">‹</div>
+          <div class="chat-title"><span class="dot"></span>自由对话</div>
+          <div class="header-actions">
+            <div class="speaker-btn">🔊</div>
+            <div class="end-btn">结束</div>
+          </div>
+        </div>
+        <div class="messages">
+          <div class="msg-tutor">
+            <div class="avatar">T</div>
+            <div>
+              <div class="txt">Hi there, welcome in! What can I get started for you today?</div>
+              <div class="speak">🔊 朗读</div>
+            </div>
+          </div>
+        </div>
+        <div class="rec-hint">← 滑走取消</div>
+        <div class="composer rec">
+          <div class="rec-inner">
+            <div class="waveform-mid">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="rec-label">正在听你说</div>
+            <div class="rec-timer">0:03</div>
+          </div>
+          <div class="btn-round btn-stop">■</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><div class="tab-icon">🏠</div>首页</div>
+          <div class="tab"><div class="tab-icon">📖</div>词库</div>
+          <div class="tab active"><div class="tab-icon">💬</div>对话</div>
+          <div class="tab"><div class="tab-icon">📝</div>语法</div>
+          <div class="tab"><div class="tab-icon">👤</div>我</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="state-row">
+      <div class="state">idle</div>
+      <div class="state on">recording</div>
+      <div class="state">pending</div>
+      <div class="state">sending</div>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">✓ <b>零新增层</b>——composer 本身承载录音态，物理不可能重叠</div>
+      <div class="pros">✓ 消息历史全部可见，用户随时读 AI 上一句</div>
+      <div class="pros">✓ 76px 高度和普通 composer(54px) 相差不大，视觉重心不跳</div>
+      <div class="pros">✓ 单一停止按钮：按下 = 录音，松开/点击 = 停止识别，交互闭环干净</div>
+      <div class="pros">✓ 与 iMessage 语音消息条同构，用户习惯</div>
+      <div class="cons">✗ 波形 32px 高偏矮，视觉刺激不如 A 强</div>
+      <div class="metric-row">
+        <span class="k">状态占屏</span><span class="v">9% (76 / 844)</span>
+        <span class="k">z-layer</span><span class="v">20（原 composer 层）</span>
+        <span class="k">HIG 匹配</span><span class="v">iMessage / WhatsApp voice</span>
+        <span class="k">消息可见性</span><span class="v">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== VARIANT C =============== -->
+  <div class="variant C">
+    <div class="variant-header">
+      <div class="variant-title">C · Composer 上方推起波形</div>
+      <div class="variant-score">40/50</div>
+    </div>
+    <div class="variant-tag">录音时在 composer 之上推起 100px 波形层，输入框沉入 · 参考 Slack 语音、Telegram voice</div>
+
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span class="time">11:57</span>
+        <span class="right">•••• 5G 63%</span>
+      </div>
+      <div class="screen">
+        <div class="chat-header">
+          <div class="back-btn">‹</div>
+          <div class="chat-title"><span class="dot"></span>自由对话</div>
+          <div class="header-actions">
+            <div class="speaker-btn">🔊</div>
+            <div class="end-btn">结束</div>
+          </div>
+        </div>
+        <div class="messages">
+          <div class="msg-tutor">
+            <div class="avatar">T</div>
+            <div>
+              <div class="txt">Hi there, welcome in! What can I get started for you today?</div>
+              <div class="speak">🔊 朗读</div>
+            </div>
+          </div>
+        </div>
+        <!-- push-wave 完全替代 composer 位置（rec 态下 .composer 被 display:none）  -->
+        <div class="composer rec">
+          <div class="input">...</div>
+          <div class="btn-round btn-mic rec">🎙</div>
+          <div class="btn-round btn-send disabled">›</div>
+        </div>
+        <div class="push-wave">
+          <div class="push-label-row">
+            <div class="push-label">正在听你说</div>
+            <div class="push-timer">0:03</div>
+            <div class="push-cancel">取消</div>
+          </div>
+          <div class="push-waveform">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><div class="tab-icon">🏠</div>首页</div>
+          <div class="tab"><div class="tab-icon">📖</div>词库</div>
+          <div class="tab active"><div class="tab-icon">💬</div>对话</div>
+          <div class="tab"><div class="tab-icon">📝</div>语法</div>
+          <div class="tab"><div class="tab-icon">👤</div>我</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="state-row">
+      <div class="state">idle</div>
+      <div class="state on">recording</div>
+      <div class="state">pending</div>
+      <div class="state">sending</div>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">✓ 波形 44px 高 + 独立 label 行，比 B 视觉信息更丰富</div>
+      <div class="pros">✓ 「取消」是明确文字按钮，无歧义</div>
+      <div class="pros">✓ 消息历史大部分可见（推起层只占 ~100px）</div>
+      <div class="cons">✗ 用两个不同视觉容器承载「无字状态」——录音态和 pending 态需两套 CSS，实现复杂</div>
+      <div class="cons">✗ 100px 高度视觉重量不轻不重，介于 A/B 之间，反而尴尬</div>
+      <div class="cons">✗ 隐藏 composer 后再推起波形，动画容易「闪」</div>
+      <div class="metric-row">
+        <span class="k">状态占屏</span><span class="v">12% (100 / 844)</span>
+        <span class="k">z-layer</span><span class="v">25（新推起层）</span>
+        <span class="k">HIG 匹配</span><span class="v">Slack / Telegram</span>
+        <span class="k">消息可见性</span><span class="v">88%</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="scoring">
+  <h2>自评打分（50 分制）· <span class="picked">定稿 B</span></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>维度</th>
+        <th>依据</th>
+        <th class="n">A · Sheet</th>
+        <th class="n">B · 就地形变</th>
+        <th class="n">C · 推起波形</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>状态互斥性</td>
+        <td>录音 / 待发送物理不可能重叠</td>
+        <td class="n">10</td><td class="n">10</td><td class="n">9</td>
+      </tr>
+      <tr>
+        <td>iOS HIG 一致性</td>
+        <td>本站 push 栈无 modal（t_1bfbf0ed 审查）</td>
+        <td class="n">5</td><td class="n">10</td><td class="n">7</td>
+      </tr>
+      <tr>
+        <td>消息历史可见性</td>
+        <td>用户可继续读上一句 AI 回复</td>
+        <td class="n">4</td><td class="n">10</td><td class="n">9</td>
+      </tr>
+      <tr>
+        <td>视觉重心稳定</td>
+        <td>状态切换时布局跳动幅度</td>
+        <td class="n">7</td><td class="n">10</td><td class="n">7</td>
+      </tr>
+      <tr>
+        <td>实现复杂度</td>
+        <td>越低分越高：一套 CSS 承载所有态</td>
+        <td class="n">7</td><td class="n">8</td><td class="n">8</td>
+      </tr>
+      <tr class="total win">
+        <td colspan="2">总计</td>
+        <td class="n">44</td><td class="n">48</td><td class="n">40</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <b>B 胜的核心理由</b>：赤拔抱怨的根问题是「都重叠了」——B 用「零新增层」的物理策略从源头消除了这个类问题。<br>
+    A 落选：为了消除重叠付出了太大代价（遮挡消息历史 + 与本站无 modal 的 HIG 决定冲突）。<br>
+    C 落选：需要两个不同容器（推起层 + composer）承载两个态，实现和动画都更复杂，视觉收益却不明显。<br>
+    <b>待发送态（三案共守）</b>：录音结束后 composer 还原为普通输入框，内左侧多一个红色脉冲 dot + 识别出的文字（primary-soft 底 + primary 边框 1.5px），发送按钮变红色并呼吸；用户点发送按钮 = 发送，点输入框任意位置 = 进入编辑（dot 消失，边框还原为 rule 灰）。<b>不再有独立徽章。</b><br>
+    <b>P2 状态栏溢出</b>：所有方案顶部保留 44px safe-area-inset-top；conversation 页面的 layout 修正为不覆盖 `.page-outlet` 的 padding-top。
+  </div>
+</div>
+
+</body>
+</html>

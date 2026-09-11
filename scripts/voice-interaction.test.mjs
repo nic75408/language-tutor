@@ -130,9 +130,25 @@ async function main() {
   const base = 'http://127.0.0.1:' + port;
 
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  // 关键：拦截 SW 注册——否则第二次 goto 后 SW 缓存了旧 app.css/JS，样式改动看不到
+  await context.route('**/sw.js', (route) => route.fulfill({ status: 404, body: '' }));
+  const page = await context.newPage();
   await page.addInitScript(MOCK_SPEECH_INIT);
   page.on('pageerror', (e) => console.log('PAGE ERROR:', e.message));
+
+  // 保险起见：卸载已存在的 SW 注册 + 清 caches
+  await page.goto(base + '/');
+  await page.evaluate(async () => {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  });
 
   await page.goto(base + '/#conversation/chat/free');
   await page.waitForSelector('#conv-messages', { timeout: 5000 });
@@ -147,7 +163,7 @@ async function main() {
 
   // ---- 验收标准 2：所有可点击区域 ≥ 44×44pt ----
   const tapTargets = await page.evaluate(() => {
-    var sels = ['#conv-mic', '#conv-send', '#conv-pending-badge', '.msg-speak-btn'];
+    var sels = ['#conv-mic', '#conv-send', '.msg-speak-btn'];
     var out = [];
     sels.forEach(function (sel) {
       document.querySelectorAll(sel).forEach(function (el) {
@@ -161,31 +177,61 @@ async function main() {
   check('所有语音相关可点击区域 ≥ 44×44pt', tapTargets.length > 0 && tooSmall.length === 0,
     JSON.stringify(tapTargets) + (tooSmall.length ? ' TOO_SMALL=' + JSON.stringify(tooSmall) : ''));
 
-  // ---- 验收标准 3：录音状态有波形 + 计时可见反馈 ----
+  // ---- 验收标准 3：录音状态（composer.is-recording）有波形 + 计时可见反馈 · t_c3407922 定稿 B ----
   await page.evaluate(() => { window.__mock.nextSTTResult = 'I has a apple'; });
-  const overlayHiddenBefore = await page.$eval('#conv-recording-overlay', (el) => el.hidden);
+  const composerRecBefore = await page.$eval('#conv-composer', (el) => el.classList.contains('is-recording'));
   await page.dispatchEvent('#conv-mic', 'mousedown');
   await page.waitForTimeout(50);
-  const overlayVisibleDuring = await page.$eval('#conv-recording-overlay', (el) => !el.hidden);
-  const waveformVisible = await page.$eval('.recording-waveform', (el) => !!el);
+  const composerRecDuring = await page.$eval('#conv-composer', (el) => el.classList.contains('is-recording'));
+  const waveformVisible = await page.$eval('.rec-waveform', (el) => {
+    var s = getComputedStyle(el);
+    return s.display !== 'none' && el.getBoundingClientRect().width > 0;
+  });
+  // 关键：录音态下 input 与 mic/send 按钮必须完全不可见（B 案零重叠）
+  const inputHiddenDuringRec = await page.$eval('#conv-input', (el) => getComputedStyle(el).display === 'none');
+  const micHiddenDuringRec = await page.$eval('#conv-mic', (el) => getComputedStyle(el).display === 'none');
+  const sendHiddenDuringRec = await page.$eval('#conv-send', (el) => getComputedStyle(el).display === 'none');
   await page.waitForTimeout(300); // 让计时器至少走一格
-  const timerText = await page.$eval('#conv-recording-timer', (el) => el.textContent);
+  const timerText = await page.$eval('#conv-rec-timer', (el) => el.textContent);
   await page.dispatchEvent('#conv-mic', 'mouseup');
-  await page.waitForTimeout(80);
-  const overlayHiddenAfter = await page.$eval('#conv-recording-overlay', (el) => el.hidden);
-  check('录音开始前 overlay 隐藏', overlayHiddenBefore === true);
-  check('录音中 overlay 显示 + 波形存在', overlayVisibleDuring && waveformVisible);
+  await page.waitForTimeout(200);  // 之前 80ms 可能不够，MockRecognition setTimeout 20ms + rAF
+  await page.waitForFunction(() => document.querySelector('#conv-composer').classList.contains('is-pending'), null, { timeout: 2000 });
+  const composerRecAfter = await page.$eval('#conv-composer', (el) => el.classList.contains('is-recording'));
+  check('录音开始前 composer 无 is-recording', composerRecBefore === false);
+  check('录音中 composer.is-recording + 波形可见', composerRecDuring && waveformVisible);
+  check('录音中 input/麦克风/发送按钮全部让位（零重叠）',
+    inputHiddenDuringRec && micHiddenDuringRec && sendHiddenDuringRec,
+    'input=' + inputHiddenDuringRec + ' mic=' + micHiddenDuringRec + ' send=' + sendHiddenDuringRec);
   check('录音计时器有输出', /^\d+:\d{2}$/.test(timerText), 'timerText=' + timerText);
-  check('录音结束后 overlay 重新隐藏', overlayHiddenAfter === true);
+  check('录音结束后 composer.is-recording 移除', composerRecAfter === false);
 
   // ---- 验收标准 4：STT 结果填入输入框后不自动发送，需用户点发送 ----
   const inputValueAfterSTT = await page.$eval('#conv-input', (el) => el.value);
   const userMsgCountAfterSTT = await page.$$eval('.msg-row.user', (els) => els.length);
-  const pendingBadgeVisible = await page.$eval('#conv-pending-badge', (el) => !el.hidden);
+  // 定稿 B：pending 由 composer.is-pending 承载，input 边框变红 + 内嵌 dot 可见 + 发送按钮变红
+  // 等 pending 类稳定 attach（onEnd/onResult 竞态可能先 idle 后 pending）
+  await page.waitForFunction(() => {
+    var c = document.querySelector('#conv-composer');
+    return c && c.classList.contains('is-pending');
+  }, null, { timeout: 3000 });
+  const isPending = await page.$eval('#conv-composer', (el) => el.classList.contains('is-pending'));
+  const pendingDotVisible = await page.$eval('.pending-dot', (el) => getComputedStyle(el).display !== 'none');
+  // 等 pending style propagate 到 border（Chromium getComputedStyle 有时序缓存）
+  const inputWrapBorder = await page.waitForFunction(() => {
+    var el = document.querySelector('#conv-composer.is-pending .conv-input-wrap');
+    if (!el) return null;
+    var cs = getComputedStyle(el);
+    // 只有当 border-top-color 是 primary（rgb(178,58,40)）时才 return
+    if (!/^rgb.*\(1(7[5-9]),\s*58,\s*40/.test(cs.borderTopColor)) return null;
+    return cs.borderTopColor;
+  }, null, { timeout: 3000 }).then((h) => h.jsonValue());
   const sendBtnEnabled = await page.$eval('#conv-send', (el) => !el.disabled);
   check('语音识别结果已填入输入框', inputValueAfterSTT === 'I has a apple', 'value=' + inputValueAfterSTT);
   check('填入后未自动发送（用户消息数仍为 0）', userMsgCountAfterSTT === 0, 'count=' + userMsgCountAfterSTT);
-  check('待发送徽章可见（pending badge）', pendingBadgeVisible);
+  check('composer 进入 is-pending 态（B 案：无独立徽章，靠 composer class）', isPending);
+  check('pending-dot 可见（输入框内脉冲红点）', pendingDotVisible);
+  check('input 边框变红（primary #B23A28 ~ rgb(178, 58, 40)）',
+    /1(78|76|75|77),\s*58,\s*40/.test(inputWrapBorder), 'border=' + inputWrapBorder);
   check('发送按钮已启用（等待用户主动点击）', sendBtnEnabled);
 
   await page.click('#conv-send');

@@ -59,9 +59,15 @@
   --color-text-secondary: var(--color-ink-2);
   --color-border: var(--color-rule);
 
-  --tab-bar-height: 82px;
+  /* iOS PWA 安全区适配（t_fd6d41b8）：
+   * - --tab-bar-content-h：可控内容高度（8px 顶 padding + 24px icon + 4px gap + 10px label + 8px 底 padding = 54px）
+   * - --safe-bottom：Home Indicator inset（iPhone 34px），独立叠加在内容下方，不吃内容
+   * - --tab-bar-height：供 .page-outlet padding-bottom 计算内容避让距离
+   */
+  --tab-bar-content-h: 54px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+  --tab-bar-height: calc(var(--tab-bar-content-h) + var(--safe-bottom));
 }
 
 * {
@@ -153,12 +159,15 @@ body {
   color: var(--color-ink-3);
 }
 
-/* 底部 Tab Bar（5 项，全局导航根组件）—— 见 DESIGN.md > Components > Tab Bar */
+/* 底部 Tab Bar（5 项，全局导航根组件）—— 见 DESIGN.md > Components > Tab Bar
+ * iOS PWA 安全区适配（t_fd6d41b8）：内容高度 54px + Home Indicator 34px 独立叠加。
+ * 桌面/安卓：total = 54px；iPhone notch/island = 54 + 34 = 88px。
+ */
 .tab-bar {
   flex: 0 0 auto;
   display: flex;
-  height: var(--tab-bar-height);
-  padding: var(--space-2) var(--space-2) calc(var(--space-2) + var(--safe-bottom));
+  height: calc(var(--tab-bar-content-h) + var(--safe-bottom));
+  padding: 0 var(--space-2) var(--safe-bottom);
   background: var(--color-paper);
   border-top: 1px solid var(--color-rule);
 }
@@ -170,6 +179,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
+  /* iOS HIG 触控热区（t_fd6d41b8）：整个 tab-item 高度 = 内容 54px（不含 safe-area），超过最小 44pt */
+  min-height: var(--tab-bar-content-h);
   background: none;
   border: none;
   padding: var(--space-2);
@@ -493,10 +504,13 @@ body {
   margin-bottom: 12px;
 }
 
-/* Sticky 顶栏容器（DESIGN.md sticky-tabs · t_30d5ddc8） */
+/* Sticky 顶栏容器（DESIGN.md sticky-tabs · t_30d5ddc8）
+ * iOS PWA 安全区适配（t_fd6d41b8）：stuck 时贴到状态栏下方而非屏顶——top = safe-area-inset-top。
+ * 桌面/安卓 = 0；iPhone = 47/59px。
+ */
 .vocab-sticky-tabs {
   position: sticky;
-  top: 0;
+  top: var(--safe-top);
   z-index: 10;
   margin: 0 calc(var(--pad-page) * -1) 12px;   /* 出血到屏边 */
   padding: 8px var(--pad-page) 10px;
